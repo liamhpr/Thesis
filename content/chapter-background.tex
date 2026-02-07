@@ -7,16 +7,20 @@ for understanding this thesis. \dots
 \section{Large Language Models and Generation}
 \label{sec:background:llms}
 Large Language Models (LLMs) represent a class of 
-deep learning models designed to process, 
+deep learning models(PROOF???) designed to process, 
 understand, and generate human language. 
 At their core, modern LLMs are built upon the 
-Transformer architecture \cite{NIPS2017_3f5ee243, naveed2024comprehensiveoverviewlargelanguage}, 
+Transformer architecture 
+\cite{NIPS2017_3f5ee243, naveed2024comprehensiveoverviewlargelanguage}, 
 utilizing mechanisms such as self-attention to model 
 complex dependencies between words across long sequences.
-While they demonstrate capabilities in reasoning and coding,
+While they demonstrate capabilities in reasoning 
+\cite{wei2023chainofthoughtpromptingelicitsreasoning} 
+and coding \cite{tian2023chatgptultimateprogrammingassistant},
 their fundamental operation remains probabilistic. They 
 predict the likelihood of the next token in a sequence
 based on the preceding context.
+\cite{NIPS2017_3f5ee243, bahdanau2016neuralmachinetranslationjointly}
 
 \subsection{Transformers and Next-token prediction}
 \label{sec:background:llms:transformers}
@@ -25,19 +29,20 @@ the probability distribution of a target sequence of tokens
 $y = (y_1, y_2, \dots, y_T)$ given an input context or
 prompt $x$. The model decomposes the joint probability of
 the sequence into a product of conditional probabilities
-using the chain rule of probability.
-$$P(y | x) = \prod_{t=1}^{T} P(y_t | x, y_{<t})$$
-Where $y_t$ is hte token at step $t$ and $y_{<t}$ represents
+using the chain rule of probability. 
+\cite{bahdanau2016neuralmachinetranslationjointly}
+$$P(y | x) = \prod_{t=1}^{T} P(y_t | y_{<t}, x)$$
+Where $y_t$ is the token at step $t$ and $y_{<t}$ represents
 all preceeding tokens in the generated sequence.
 \newline
-To copute these probabilities, the Transformer processes the 
+To compute these probabilities, the Transformer processes the 
 input $x$ and the generated history $y_{<t}$ to produce a 
 vector of non-normalized scores, known as logits, for every 
 token in the vocabulary $V$. Let $z_i$ be the logit 
 corresponding to the $i$-th token in the vocabulary. The 
 model converts these logits into a valid probability
 distribution using the Softmax function.
-$$P(y_t = v_i | x, y_{<t}) = \frac{exp(z_i)}{\sum_{j \in V} exp(z_j)}$$
+$$P(y_t = v_i | y_{<t}, x) = \frac{exp(z_i)}{\sum_{j \in V} exp(z_j)}$$
 This process is repeated iteratively, where the token 
 selected at step $t$ is appended to the input for step $t + 1$.
 

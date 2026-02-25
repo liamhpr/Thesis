@@ -1,53 +1,502 @@
+% !TEX root = ../main.tex
+%
 \chapter{Background}
-\label{sec:backgound}
-
+\label{sec:background}
 This chapter will discuss the key concepts essential 
 for understanding this thesis. \dots
+
 
 \section{Large Language Models and Generation}
 \label{sec:background:llms}
 Large Language Models (LLMs) represent a class of 
-deep learning models(PROOF???) designed to process, 
+deep learning models designed to process, 
+% PROOF:	    
 understand, and generate human language. 
 At their core, modern LLMs are built upon the 
-Transformer architecture 
-\cite{NIPS2017_3f5ee243, naveed2024comprehensiveoverviewlargelanguage}, 
+Transformer architecture,
 utilizing mechanisms such as self-attention to model 
-complex dependencies between words across long sequences.
+complex dependencies between words across long sequences 
+\parencite{NIPS2017_3f5ee243, naveed2024comprehensiveoverviewlargelanguage}.
 While they demonstrate capabilities in reasoning 
-\cite{wei2023chainofthoughtpromptingelicitsreasoning} 
-and coding \cite{tian2023chatgptultimateprogrammingassistant},
+\parencite{wei2023chainofthoughtpromptingelicitsreasoning} 
+and coding \parencite{tian2023chatgptultimateprogrammingassistant},
 their fundamental operation remains probabilistic. They 
 predict the likelihood of the next token in a sequence
-based on the preceding context.
-\cite{NIPS2017_3f5ee243, bahdanau2016neuralmachinetranslationjointly}
+based on the preceding context
+\parencite{NIPS2017_3f5ee243, bahdanau2016neuralmachinetranslationjointly}.
+
 
 \subsection{Transformers and Next-token prediction}
 \label{sec:background:llms:transformers}
 The primary objective of an autoregressive LLM is to model
 the probability distribution of a target sequence of tokens
-$y = (y_1, y_2, \dots, y_T)$ given an input context or
+$\mathbf{y} = (y_1, y_2, \dots, y_T)$ given an input context or
 prompt $x$. The model decomposes the joint probability of
 the sequence into a product of conditional probabilities
-using the chain rule of probability. 
-\cite{bahdanau2016neuralmachinetranslationjointly}
-$$P(y | x) = \prod_{t=1}^{T} P(y_t | y_{<t}, x)$$
-Where $y_t$ is the token at step $t$ and $y_{<t}$ represents
-all preceeding tokens in the generated sequence.
-\newline
+using the chain rule of probability 
+\parencite{bahdanau2016neuralmachinetranslationjointly}:
+\begin{equation}
+    P(\mathbf{y} | x) = \prod_{t=1}^{T} P(y_t \mid \mathbf{y}_{<t}, x)
+    \label{eq:sequence_probability}
+\end{equation}
+Where $y_t$ is the token at step $t$ and $\mathbf{y}_{<t}$ represents
+all preceeding tokens $y_1, \dots, y_{t-1}$ in the generated sequence.
 To compute these probabilities, the Transformer processes the 
-input $x$ and the generated history $y_{<t}$ to produce a 
+input $x$ and the generated history $\mathbf{y}_{<t}$ to produce a 
 vector of non-normalized scores, known as logits, for every 
-token in the vocabulary $V$. Let $z_i$ be the logit 
-corresponding to the $i$-th token in the vocabulary. The 
+token in the vocabulary $\mathcal{V}$. Let $z_i$ be the logit 
+corresponding to the $i$-th token $v_i \in \mathcal{V}$. The 
 model converts these logits into a valid probability
-distribution using the Softmax function.
-$$P(y_t = v_i | y_{<t}, x) = \frac{exp(z_i)}{\sum_{j \in V} exp(z_j)}$$
+distribution using the Softmax function
+\parencite{10.1007/978-3-642-76153-9_28, NIPS2017_3f5ee243}:
+\begin{equation}
+    P(y_t = v_i \mid \mathbf{y}_{<t}, x)
+	= \frac{\exp(z_i)}{\sum_{j=1}^{|\mathcal{V}|} \exp(z_j)} 
+	\quad \quad \forall i \in {1, \dots, |\mathcal{V}|}
+    \label{eq:logit_softmax}
+\end{equation}
 This process is repeated iteratively, where the token 
-selected at step $t$ is appended to the input for step $t + 1$.
+selected at step $t$ is appended to the input for step $t + 1$
+\parencite{NIPS2017_3f5ee243}.
+
+
+\subsection{Decoding Strategies and the Role of Temperature}
+\label{sec:background:llms:decoding}
+Once the probability distribution over the Vocabulary is computed for 
+the next token, a \textbf{decoding strategy} determines what token will 
+be selected. Common maximization-based strategies include 
+\textbf{Greedy Decoding} or \textbf{Beam Search}.
+\textbf{Greedy Decoding} is the simplest deterministic method. It 
+selects the token with the highest probability mass at the current
+time step $t$
+\parencite{ippolito2019comparisondiversedecodingmethods}:
+\begin{equation}
+    y_t = \argmax_{y \in \mathcal{V}} P(y \mid \mathbf{y}_{<t}, x)
+    \label{eq:greedy_decoding}
+\end{equation}
+While computationally efficient, this strategy often yields 
+sub-optimal results. By focusing solely on local probability 
+maximization, the strategy risks settling into local optima, 
+effectively missing high-probability sequences hidden behind 
+lower-probability initial tokens.
+Furthermore, greedy decoding is known to produce repetitive and 
+generic text, as it fails to account for the diversity and 
+global coherence of the sequence
+\parencite{shi2024thoroughexaminationdecodingmethods}.
+
+\textbf{Beam Search} extends Greedy Decoding by maintaining multiple 
+hypotheses at each time step, rather than a single sequence. It 
+introduces a hyperparameter $k$, known as the \textbf{beam width}, 
+which determines the number of candidates to keep.
+At each step $t$, the algorithm expands all $k$ candidates from the 
+previous step by appending every possible next token from the 
+vocabulary $\mathcal{V}$
+\parencite{shi2024thoroughexaminationdecodingmethods}.
+
+Formally, let $\mathcal{B}_{t-1} = \{\mathbf{y}^{(1)}_{<t}, \dots, 
+\mathbf{y}^{(k)}_{<t}\}$ be the set of $k$ hypothesis sequences 
+generated up to step $t-1$. The algorithm proceeds in three steps
+\parencite{shi2024thoroughexaminationdecodingmethods}:
+\begin{enumerate}
+	\item \textbf{Expansion}: Each hypothesis in 
+	    $\mathcal{B}_{t-1}$ is extended with every possible token
+	    $v$ from the vocabulary $\mathcal{V}$, creating a candidate
+	    set $\mathcal{C}_t$.
+
+	\item \textbf{Scoring}: Each candidate sequence is assigned a 
+	    score based on its cumulative log-probability. The score 
+	    for a sequence $\mathbf{y}_{1:t}$ 
+	    (representing $y_1,\dots,y_t$)
+	    is defined recursively:
+	    \begin{equation}
+		\text{Score}(\mathbf{y}_{1:t})
+		    = \text{Score}(\mathbf{y}_{1:t-1}) 
+		    + \log P(y_t \mid \mathbf{y}_{<t}, x)
+	    	\label{eq:Beam_Score}
+	    \end{equation}
+
+	\item \textbf{Selection (Pruning)}: The algorithm selects the
+	    $k$ candidates with the highest scores to form the new
+	    hypothesis set $\mathcal{B}_t$:
+	    \begin{equation}
+		\mathcal{B}_t = 
+	    \operatorname*{arg-top-\textit{k}}_{\mathbf{y}_{1:t} \in \mathcal{C}_t}
+	    \left(\text{Score}(\mathbf{y}_{1:t})\right)
+	    	\label{eq:Beam_Selection}
+	    \end{equation}
+\end{enumerate}
+This approach allows the model to recover from locally sub-optimal 
+decisions if they lead to a highly probable global sequence. However,
+Beam Search is computationally more expensive than greedy methods and, 
+as noted by \textcite{holtzman2020curiouscaseneuraltext}, can still
+suffer from repetitive loops or generic responses in open-ended
+generation tasks.
+
+\textbf{Sampling} represents a fundamental shift from 
+maximization-based decoding strategies towards stochastic generation.
+Instead of strictly selecting the token with the highest probability, 
+the model randomly draws the next token $y_t$ from the conditional 
+probability distribution $P(y_t \mid \mathbf{y}_{<t}, x)$
+\parencite{shi2024thoroughexaminationdecodingmethods}.
+
+Formally, at each time step $t$, the next token is sampled according 
+to: 
+\begin{equation}
+    y_t \sim P(y \mid \mathbf{y}_{<t}, x)
+    \label{eq:sampling}
+\end{equation}
+This stochasticity allows the model to generate more diverse and 
+creative outputs for the same input. However, pure random sampling
+from the full distribution can occasionally lead to incoherence.
+If the "tail" of the distribution, that contains very low-probability
+tokens, is sampled, it may disrupt the semantic flow or factual 
+accuracy of the sequence.
+To mitigate this risk while preserving diversity, two truncation 
+techniques are commonly employed:
+\begin{enumerate}
+	\item \textbf{Top-k Sampling} 
+	    \parencite{fan2018hierarchicalneuralstorygeneration}:
+		The model samples from the top $k$ most probable
+		tokens. This effectively truncates the unreliable
+		tail of the distribution. 
+	\item \textbf{Nucleus (Top-p) Sampling}
+	    \parencite{holtzman2020curiouscaseneuraltext}:
+		The model samples from the smallest set of tokens
+		whose cumulative probability exceeds a threshold
+		$p$ (e.g., $p = 0.9$). Unlike Top-k, which uses
+		a fixed number of tokens, Top-p adapts dynamically.
+		The set of candidates grows when the model is 
+		uncertain (flat distribution) and shrinks when the 
+		model is confident (peaked distribution).
+\end{enumerate}
+While these truncation methods improve coherence, they operate 
+by removing options. A more continuous method for controlling the shape 
+of the probability distribution, and the core mechanism for this 
+thesis, is \textbf{Temperature Scaling}.
+
+\textbf{Temperature Scaling} is a technique used to calibrate the
+confidence of the model's predictions. Unlike Top-$k$ or 
+Nucleus Sampling, which truncate the vocabulary, temperature
+scaling modifies the probability distribution itself by rescaling 
+the logits before the Softmax function is applied
+\parencite{shi2024thoroughexaminationdecodingmethods}.
+
+Let $z_i$ be the logit for token $v_i$. We introduce a hyperparameter
+$\tau$ > 0, called \textbf{temperature}. 
+The probability of selecting token $v_i$ is then given by:
+\begin{equation}
+    P(y_t = v_i \mid \mathbf{y}_{<t}, x; \tau)
+    = \frac{\exp(z_i/\tau)}{\sum_{j \in \mathcal{V}} \exp(z_j/\tau)}
+    \label{eq:Temperature_Scaling}
+\end{equation}
+The value of $\tau$ controls the entropy of the ouptut distribution.
+When choosing a \textbf{low temperature}, $\tau < 1.0$, the 
+distribution becomes sharper, i.e., more peaked. The difference 
+between large and small logits is exaggerated, causing the model 
+to become more confident and deterministic. In the limit, this 
+approximates greedy decoding. 
+Using a \textbf{high temperature}, $\tau > 1.0$, flattens the 
+distribution towards a uniform distribution. This increases the 
+likelihood of selecting lower-probability tokens, resulting in 
+more diverse but also potentially more incoherent or hallucinatory
+outputs. For the temperature $\tau = 1.0$, the distribution remains
+unchanged, reflecting the model's original logits 
+\parencite{shi2024thoroughexaminationdecodingmethods}.
+
+In standard generation tasks, $\tau$ is typically a fixed 
+hyperparameter
+% PROOF:
+tuned to balance diversity and equality. However, in this thesis, we 
+interpret temperature variation as a mechanism to explore the model's 
+epistemic uncertainty. 
+% NOTE: Do I want to keep that sentence?
+
+\iffalse
+    By observing how the set of plausible 
+    answers changes across different temperatures, we can construct a 
+    \textbf{Credal Set}(POINT TO CREDAL SET SECTION???) 
+    % FIX:  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    of probability distributions, providing a more robust measure of 
+    uncertainty(POINT TO UNCERTAINTY SECTION???) than a single point 
+    % FIX:  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    estimate. 
+\fi
+
 
 \section{Uncertainty in Machine Learning}
 \label{sec:background:uncertainty}
+As LLMs are increasingly deployed in real-world and high-stakes
+applications, for example in healthcare
+\parencite{10.1007/978-3-031-66535-6_17}, 
+their reliability becomes a critical concern.
+A fundamental challenge with deep neural networks, including LLMs,
+is that they are prone to overconfidence. They frequently assign
+high probabilities to incorrect predictions
+\parencite{guo2017calibrationmodernneuralnetworks}.
+Consequently, evaluating a model's performance requires not only
+measuring its accuracy but also quantifying its \textbf{uncertainty}.
+
+
+\subsection{Aleatoric and Epistemic Uncertainty}
+\label{sec:background:uncertainty:aleatoric_epistemic}
+In the field of machine learning, uncertainty is traditionally 
+categorized into two distinct sources: aleatoric and epistemic
+\parencite{kendall2017uncertaintiesneedbayesiandeep, H_llermeier_2021}.
+
+\textbf{Aleatoric Uncertainty} arises from the inherent complexity,
+noise, or randomness in the underlying data generation process. It
+is irreducable, meaning providing the model with more training data 
+will not eliminate this uncertainty
+\parencite{kendall2017uncertaintiesneedbayesiandeep, H_llermeier_2021}.
+In the context of Natural 
+Language Processing (NLP), aleatoric uncertainty is highly prevalant
+due to the inherent flexibility and ambiguity of human language.
+For a given prompt, there are often multiple semantically equivalent
+and perfectly valid responses. For example, the answers 
+"It is raining heavily" and "It is pouring outside" describe the
+same state, distributing the model's probability mass across 
+different valid token sequences.
+% PROOF: (Do I even need a reference for the last part?)
+
+\textbf{Epistemic uncertainty}, on the other hand, stems from a lack
+of knowledge or information about the best model.
+This uncertainty occurs when a model encounters out-of-distribution
+(OOD) inputs or queries about facts absent from its training data.
+Unlike aleatoric uncertainty, epistemic uncertainty is reducable.
+Theoretically it can be minimized by providing the model with more 
+comprehensive training data
+\parencite{kendall2017uncertaintiesneedbayesiandeep, H_llermeier_2021}.
+
+% WARNING: Should I include this paragraph???
+\iffalse
+    For the task of Question Answering (QA) in LLMs, distinguishing
+    between these two types of uncertainty is paramount. High aleatoric
+    uncertainty simply means the model has many valid ways to phrase a 
+    correct answer. High epistemic uncertainty, however, indicates that 
+    the model does not conceptually know the answer, making it highly
+    susceptible to generating factually incorrect statements, known as
+    \textbf{hallucinations}.
+    A primary objective of this thesis is to effectively isolate and
+    quantify this epistemic uncertainty to predict when the model's
+    outputs are unreliable.  
+% PROOF
+\fi
+
+
+\subsection{Standard Metrics: Shannon Entropy and Likelihood}
+\label{sec:background:uncertainty:standard_metrics}
+To quantify the theoretical concepts of aleatoric and epistemic
+uncertainty, we rely on established mathematical metrics. In the
+context of probabilistic sequence modeling, two fundamental 
+measures for evaluating a model's predictive confidence are 
+\textbf{Likelihood} and \textbf{Shannon Entropy}.
+
+\subsubsection{Likelihood and Negative Log-Likelihood (NLL)}
+\label{sec:background:uncertainty:standard_metrics:nll}
+The likelihood represents the probability assigned by the model
+to a specific, observed sequence of tokens. For a given input
+context $x$ and a target sequence $\mathbf{y}$,
+the sequence likelihood is the product of the individual token
+probabilities as defined in \ref{eq:sequence_probability}.
+Because multiplying many small probabilities leads
+to numerical underflow, it is standard practice to compute
+the \textbf{Negative Log-Likelihood (NLL)}
+\parencite{Goodfellow-et-al-2016}.
+
+Taking the negative logarithm transforms the product of the 
+probabilities into a sum. Furthermore, to fairly compare sequences 
+of different lengths, the NLL can be normalized by the total
+number of tokens $T$, yielding the average NLL per token
+\parencite{murray2018correctinglengthbiasneural}:
+
+\begin{equation}
+    \text{NLL}(\mathbf{y} \mid x) 
+    = -\sum_{t=1}^{T} \log P(y_t \mid \mathbf{y}_{<t}, x)
+    \label{eq:nll}
+\end{equation}
+
+\begin{equation}
+    \text{average NLL}(\mathbf{y} \mid x) 
+    = -\frac{1}{T} \sum_{t=1}^{T} \log P (y_t \mid \mathbf{y}_{<t}, x)
+    \label{eq:average_nll}
+\end{equation}
+A lower NLL indicates that the model asssigns a higher
+probability to the target sequence, implying higher confidence.
+
+\subsubsection{Shannon Entropy}
+\label{sec:background:uncertainty:standard_metrics:shannon_entropy}
+While seqeuence likelihood evaluates the probability the model assigns
+to a \textit{specific} target sequence, \textbf{Shannon Entropy}
+quantifies the fundamental uncertainty inherent in a probability
+distribution. In the context of autoregressive models, calculating
+the entropy of the predictive distribution over the entire vocabulary
+at a given time step $t$ measures the expected "surprise" or 
+uncertainty in predicting the next token
+\parencite{https://doi.org/10.1002/j.1538-7305.1948.tb01338.x}.
+
+For a discrete random variable $Y_t$ representing the next token, 
+with a probability distribution $P(Y_t \mid \mathbf{y}_{<t}, x)$
+over the vocabulary $\mathcal{V}$, the Shannon Entropy $H$ is
+defined as:
+\begin{equation}
+    H(Y_t) = -\sum_{v \in \mathcal{V}} 
+    P(y_t = v \mid \mathbf{y}_{<t}, x)
+    \log P(y_t = v \mid \mathbf{y}_{<t}, x)
+    \label{eq:shannon_entropy}
+\end{equation}
+
+Entropy provides a scalar summary of the distribution's shape.
+\begin{itemize}
+    \item \textbf{Low Entropy} ($H \rightarrow 0$): The distribution
+	is highly concentrated (peaked) on one or a few tokens, 
+	indicating that the model is highly certain about its 
+	next prediction.
+
+    \item \textbf{High Entropy} ($H \rightarrow \log |\mathcal{V}|$):
+	The distribution is flat and uniform across the vocabulary,
+	indicating maximum uncertainty.
+\end{itemize}
+% PROOF: (Necessary?)
+
+
+\subsubsection{Limitations of Standard Metrics}
+\label{sec:background:uncertainty:standard_metrics:limitations}
+Both NLL and Shannon Entropy are highly effective metrics, provided 
+that the underlying probabiliy distribtuion $P$ is perfectly 
+calibrated and accurately reflects the true state of the world. 
+However, these metrics inherently assume that the model's output
+distribution is a single, precise, and entirely correct representation
+of reality 
+\parencite{guo2017calibrationmodernneuralnetworks, Gneiting01032007}. 
+
+As demonstrated by \textcite{guo2017calibrationmodernneuralnetworks},
+this assumption of a "precise probability" often breaks down in modern
+deep leraning models, including LLMs, which frequently suffer from 
+severe overconfidence and calibration. Furthermore, standard precise
+probabilities mathematically struggle to distinguish between
+inherent data noise (aleatoric) and a fundamental lack of 
+knowledge (epistemic) \parencite{H_llermeier_2021}. 
+This failure to capture true epistemic misconfidence
+necessitates ore robust mathematical frameworks, such as
+Imprecise Probabilities and Credal Sets\parencite{Walley1991-WALSRW}.
+
 
 \section{Imprecise Probabilities and Credal Sets}
-\label{sec:background:imprecise_probs}
+\label{sec:background:credal_sets}
+Traditionally probability theory operates on the assumption that all
+forms of uncertainty can be adequately represented by a single, 
+precise probability distribution \parencite{Walley1991-WALSRW}.
+Under this paradigm, an agent or model is required to assign an exact
+numerical probability to every possible event, regardless of the 
+amount of evidence available. While computationally convenient,
+this precise framework struggles to model severe epistemic
+uncertainty. When a model lacks sufficient training data or 
+encounters an ambiguous query, forcing it to produce a single 
+probability distribution often results in arbitrary or misleadingly
+confident predictions. Precise probabilities mathematically conflate
+the lack of evidence (epistemic uncertainty) with known stochastic
+noise (aleatoric uncertainty), masking the model's true state of 
+ignorance \parencite{H_llermeier_2021}.
+
+
+\subsection{Introduction to Credal Sets}
+\label{sec:background:credal_sets:intro}
+To address the limitations of precise probabilities, the framework of
+\textbf{imprecise probabilities} replaces the single distribution
+with a set of plausible distributions
+\parencite{Levi1980-LEVTEO-7, Walley1991-WALSRW}.
+A closed, convex set of probability distributions is known as a 
+\textbf{credal set} \parencite{COZMAN2000199}, denoted by 
+$Q$. 
+
+
+\subsection{Computing Uncertainty on Credal Sets}
+\label{sec:backgound:credal_sets:uncertainty}
+To quantify the total uncertainty of a model's prediction 
+using a credal set, we must extend standard metrics like 
+Shannon Entropy to operate over sets of distributions.
+Since we have a set of probability distributions $Q$, 
+we can determine the \textbf{lower entropy} and  
+\textbf{upper entropy} by finding the minimum and maximum entropy 
+values across the set \parencite{Abellán01022006, H_llermeier_2021}:
+
+\begin{equation}
+    H_*(Q) = \min_{q \in Q} H(q), \quad H^*(Q) = \max_{q \in Q} H(q)
+    \label{eq:lower_upper_entropy}
+\end{equation}
+
+We can use these bounds to quantify total uncertainty $U(Q)$, 
+aleatoric uncertainty $AU(Q)$ and epistemic uncertainty $EU(Q)$ 
+\parencite{Abellán01022006, H_llermeier_2021}:
+
+\begin{equation}
+    U(Q) = AU(Q) + EU(Q)
+    \label{eq:credal_total_uncertainty}
+\end{equation}
+
+\begin{equation}
+    H^*(Q) = H_*(Q) + \left(H^*(Q) - H_*(Q)\right)
+    \label{eq:credal_uncertainty}
+\end{equation}
+
+Here, upper entropy represents total uncertainty, lower entropy
+represents aleatoric uncertainty and the difference between 
+them is used as a measure for epistemic uncertainty. 
+
+
+\section{Relative Likelihood and Valid Temperature Sets}
+\label{sec:background:rel_ll_and_temp_sets}
+To systematically construct a credal set, we need a rigorous criterion
+to distinguish between plausubile and implausible probability
+distributions. Following recent advances in credal prediction
+\parencite{löhr2025credalpredictionbasedrelative}, 
+we achieve this by employing the statistical concept of 
+\textbf{relative likelihood}.
+
+
+\subsection{Relative Likelihood}
+\label{sec:background:rel_ll_and_temp_sets:relative_likelihood}
+In standard maximum likelihood estimation, the goal is to find
+the single best parameter that maximizes the likelihood of the
+observed data. In the context of our method, we treat the decoding 
+temperature $\tau \in \mathcal{T}$ as the parameter of interest.
+Let $L(\tau)$ denote the likelihood of the target sequence generated 
+at temperature $\tau$. Furthermore, let $\tau^{ML}$ be the optimal
+temperature that yields the highest likelihood (or equivalently,
+minimizes the average Negative Log-Likelihood).
+To characterize the plausibility of any other temperature $\tau$, we
+compute its relative likelihood $\gamma(\tau)$, defined as the 
+ratio of its likelihood to the maximum likelihood
+\parencite{Birnbaum01061962, https://doi.org/10.2307/3315449, https://doi.org/10.1111/1467-9868.00205}:
+
+\begin{equation}
+    \gamma(\tau) = 
+    \frac{L(\tau)}{L(\tau^{ML})} = 
+    \frac{L(\tau)}{\sup_{\tau' \in \mathcal{T}} L(\tau')}
+    \label{eq:relative_likelihood}
+\end{equation}
+
+By definition, $\gamma(\tau)$ is bounded in the interval $[0,1]$, 
+where $\gamma(\tau^{ML}) = 1$. The relative likelihood provides
+an intuitive measure of how well a specific temperature explains
+the data copmared to the optimal temperature setting.
+
+\subsection{Constructing $\alpha$-Cuts for Temperatures}
+\label{sec:background:rel_ll_and_temp_sets:alpha_cuts}
+On the basis of the relative likelihood, a set of valid temperatures
+can be constructed by including only those that are plausible in the  
+sense of surpassing a specific threshold $\alpha \in [0,1]$. This 
+set is formally referred to as an \textbf{$\alpha$-cut}
+\parencite{epub31329}:
+
+\begin{equation}
+    \mathcal{C}_\alpha = 
+    \{\tau \in \mathcal{T} : \gamma(\tau) \geq \alpha \}
+    \label{eq:alpha_cut}
+\end{equation}
+
+According to this definiton, a temperature $\tau$ is considered
+implausible, and is therefore excluded from the valid set, if 
+its likelihood is too small compared to the likelihood of the 
+best temperature, specifically if it is less than $\alpha$
+times the optimal likelihood.

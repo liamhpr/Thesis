@@ -1,0 +1,83 @@
+% !TEX root = ../main.tex
+%
+\chapter{Related Work}
+\label{sec:related}
+While the previous chapter established the theoretical foundations of
+language modeling and uncertainty, this chapter reviews how these 
+concepts have been applied in practice. We first examine traditional 
+approaches to uncertainty estimation in deep learning, followed by
+recent advancements in measuring semantic uncertainty in LLMs. 
+Finally, we review contemporary applications of credal sets and 
+relative likelihood, identifying the specific research gap this 
+thesis addresses.
+
+
+\section{Traditional Uncertainty Estimation in Deep Learning}
+\label{sec:related_work:traditional}
+Historically, uncertainty quantification in machine learning was 
+primarily developed for discriminative tasks, such as image 
+classification or sentiment analysis. In these settings, models output
+a probability distribution over a fixed, predefined set of classes.
+% PROOF:
+
+The most straightforward baseline for estimating uncertainty in 
+neural networks is the Maximum Softmax Probability (MSP)
+\parencite{hendrycks2018baselinedetectingmisclassifiedoutofdistribution}.
+
+This approach directly uses the highest predicted class probability 
+as a confidence score. However, as discussed in 
+\ref{sec:background:uncertainty:standard_metrics:limitations}, 
+modern deep neural networks tend to be highly overconfident,
+rendering raw softmax scores poorly calibrated and unreliable for 
+detecting out-of-distribution data
+\parencite{guo2017calibrationmodernneuralnetworks}.
+
+To capture true epistemic uncertainty, the field largely shifted toward
+\textbf{Bayesian Neural Networks (BNNs)} and \textbf{Ensemble methods}.
+BNNs attempt to learn a distribution over the model's weights rather 
+than fixed point estimates \parencite{10.1162/neco.1992.4.3.448}.
+Because exact Bayesian inference is computationally intractable
+for large networks, appproximations such as Monte Carlo (MC) Dropout
+were introduced. MC Dropout generates multiple predictions
+by keeping dropout active during inference, effectively sampling from 
+an implicit ensemble of sub-networks to stimate uncertainty 
+\parencite{gal2016dropoutbayesianapproximationrepresenting}.
+
+An alternative and highly successful empirical approach is 
+\textbf{deep ensembles} 
+\parencite{lakshminarayanan2017simplescalablepredictiveuncertainty}.
+By training multiple neural networks with the same architecture 
+but different random initializations and data shuffles, deep 
+ensembles provide a robust measure of epistemic uncertainty.
+When the individual models disagree, epistemic uncertainty is high.
+
+\subsection{Limitations for Large Language Models}
+\label{sec:related_work:traditional:limitations}
+While BNNs, MC Dropout and deep ensembles represent the gold standard 
+for uncertainty quantification in traditional deep learning, they face
+severe limitations when applied to modern generative LLMs:
+% PROOF:
+
+\begin{enumerate}
+	\item \textbf{Computational Intractability}: Modern LLMs 
+	    consist of billions of parameters. Maintaining and running
+	    inference on an ensemble of five to ten 70-billion-parameter
+	    models is prohibitively expensive in terms of both
+	    memory and compute. Similarly, running multiple forward 
+	    passes for MC Dropout during autoregressive generation
+	    scales poorly.
+
+	\item \textbf{The Open-Ended Nature of Generation}:
+	    Traditional methods assume a fixed classification space.
+	    In contrast, LLMs perform open-ended generation where
+	    the sequence length is variable, and the space of 
+	    possible outputs growths exponentially with each generated 
+	    token. Estimating uncertainty purely at the token level  
+	    (lexical uncertainty) fails to capture the actual meaning
+	    of the text.
+\end{enumerate}
+
+Because of these limitations, recent research has shifted away from 
+weight-space ensembles and token-level probabilities, focusing instead
+on the \textit{meaning} of the generated text.
+% PROOF:

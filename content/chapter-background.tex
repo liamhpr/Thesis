@@ -239,7 +239,7 @@ measuring its accuracy but also quantifying its \textbf{uncertainty}.
 
 \subsection{Aleatoric and Epistemic Uncertainty}
 \label{sec:background:uncertainty:aleatoric_epistemic}
-In the field of machine learning, uncertainty is traditionally 
+In the field of machine learning, uncertainty can be 
 categorized into two distinct sources: aleatoric and epistemic
 \parencite{kendall2017uncertaintiesneedbayesiandeep, H_llermeier_2021}.
 
@@ -291,8 +291,7 @@ context of probabilistic sequence modeling, two fundamental
 measures for evaluating a model's predictive confidence are 
 \textbf{Likelihood} and \textbf{Shannon Entropy}.
 
-\subsubsection{Likelihood and Negative Log-Likelihood (NLL)}
-\label{sec:background:uncertainty:standard_metrics:nll}
+\textbf{Likelihood and Negative Log-Likelihood (NLL)} \\
 The likelihood represents the probability assigned by the model
 to a specific, observed sequence of tokens. For a given input
 context $x$ and a target sequence $\mathbf{y}$,
@@ -323,8 +322,7 @@ number of tokens $T$, yielding the average NLL per token
 A lower NLL indicates that the model asssigns a higher
 probability to the target sequence, implying higher confidence.
 
-\subsubsection{Shannon Entropy}
-\label{sec:background:uncertainty:standard_metrics:shannon_entropy}
+\textbf{Shannon Entropy} \\
 While seqeuence likelihood evaluates the probability the model assigns
 to a \textit{specific} target sequence, \textbf{Shannon Entropy}
 quantifies the fundamental uncertainty inherent in a probability
@@ -359,8 +357,7 @@ Entropy provides a scalar summary of the distribution's shape.
 % PROOF: (Necessary?)
 
 
-\subsubsection{Limitations of Standard Metrics}
-\label{sec:background:uncertainty:standard_metrics:limitations}
+\textbf{Limitations of Standard Metrics} \\
 Both NLL and Shannon Entropy are highly effective metrics, provided 
 that the underlying probabiliy distribtuion $P$ is perfectly 
 calibrated and accurately reflects the true state of the world. 

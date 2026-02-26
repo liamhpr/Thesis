@@ -15,30 +15,58 @@ methodology developed in this thesis.
 \section{Traditional Uncertainty Quantification (UQ)}
 \label{sec:related_work:traditional}
 Applying traditional UQ techniques 
-to large language models presents substantial challenges.
+to LLMs presents substantial challenges.
 The computational overhead of Deep Ensembles 
 \parencite{lakshminarayanan2017simplescalablepredictiveuncertainty}
 or Bayesian frameworks like Monte Carlo dropout 
 \parencite{gal2016dropoutbayesianapproximationrepresenting}
 makes them impractical for natural language generation (NLG) in 
-massive models. There are also sequence-level metrics like 
-sequence-level predictive entropy, which estimates the uncertainty 
-across all possbile output sequences
-\parencite{malinin2021uncertaintyestimationautoregressivestructured}.
-While sequence-level metrics represent an improvement, they suffer
-from a fundamental flaw in the context of open-ended free-form 
-question answering: they are strictly tied to the exact lexical
-surface form of the text. Because human language is highly flexible,
-an LLM might distribute its probability mass across dozens of 
-differently phrased sequnces that all share the exact same meaning,
-e.g. "The capital of France is Paris" vs. "Paris is the French 
-capital".
-Traditional sequence-level metrics treat these lexical variations as 
-disjoint, competing hypotheses. Consequently, if the model predicts
-many synonymous answers, standard sequence entropy will register a 
-highly flat distribution and artificially inflate the uncertainty
-score.
+massive models. 
+Initial approaches to estimating LLM uncertainty directly adapted
+standard classificatoin metrics or relied on heuristic comparisons.
+These traditional baselines generally fall into three categories: 
+predictive entorpy, lexical similarity and self-evaluation.
 
+\textbf{Predictive Entropy Methods} \\
+The most straightforward methods evaluate the model's confidence 
+using the probability distributions generated during decoding. 
+Token-level entropy evaluates local uncertainty but fails to capture
+the holistic confidence of a factual claim. To address this,  
+\textcite{malinin2021uncertaintyestimationautoregressivestructured}
+proposed sequence-level predictive entorpy (often implemented as 
+length-normalized entropy), which estimates uncertainty across all
+possible output sequences. However, because these methods operate
+strictly on exact token matches, they artificially inflate uncertainty
+when an LLM distributes probability mass across multiple valid 
+phrasings of the same answer.
+
+\textbf{Lexical Similarity} \\
+To account for the fact that generated answers might differ slightly 
+in their suface forms, researchsers adapted translation metrics to 
+quantify uncertainty. By sampling multiple answers for a given 
+question, one can compute the average lexical similarity between 
+them using metrics like ROUGE-L or BLEU 
+\parencite{fomicheva2020unsupervisedqualityestimationneural}. 
+If the sampled answers have high n-gram overlap, the model is deemed 
+certain. While an improvement over strict sequence likelihood, 
+lexical similarity still struggles with open-ended generation.
+An LLM might generate "Berlin" and "The capital of Germany", which 
+share zero lexical overlap (low ROUGE-L) but convey the exact same 
+meaning, leading to false uncertainty signals.
+
+\textbf{Self-Evaluation} \\
+Another distinct approach treats the LLM as an independent evaluator of
+its own uncertainty. Methods like $p(\text{True})$ prompt the model 
+to evaluate its own generated answer or ask it directly if a proposed 
+fact is correct \parencite{kadavath2022languagemodelsmostlyknow}.
+While intuitive, self-evaluation baselines are highly sensitive
+to the specific phrasing of the prompt. 
+
+All three of these traditional baseline families fail to reliably 
+distinguish between benign linguistic flexibility and genuine factual 
+ignorance. 
+Traditional metrics treat these lexical variations as 
+disjoint, competing hypotheses. 
 This critical limitation necessitated a paradigm shift from lexical
 (word-based) probability to semantic (meaning-based) probability, 
 leading to the development of Semantic Entropy 
@@ -100,6 +128,12 @@ The cluster probability is given by:
     \label{eq:cluster_probability}
 \end{equation}
 
+\begin{figure}
+    \includegraphics[width=\textwidth]{drawio/SemanticEntropy.png}
+    \caption{Visualization of Semantic Clustering}
+    \label{fig:related_work:semantic_entropy:semantic_clustering}
+\end{figure}
+
 By treating the clusters as the new categorical variables,
 the SE is calculated as the Shannon Entropy over the cluster 
 probabilities:
@@ -126,3 +160,65 @@ where
     P(C_i \mid x) = \frac{P(c_i \mid x)}{\sum_{c \in C} P(c \mid x)}
     \label{eq:nn_cluster_likelihood}
 \end{equation}
+
+SE represents a significant advancement over raw 
+sequence likelihood. But it relies on a single, static probability
+distribution. In the standard implementation by 
+\textcite{kuhn2023semanticuncertaintylinguisticinvariances}, 
+sequences are sampled, and probabilities are evaluated at a single, 
+fixed temperature 
+(\textcite{kuhn2023semanticuncertaintylinguisticinvariances} 
+state that $\tau=0.5$ is optimal). 
+
+As established in Section \ref{sec:background:credal_sets}, precise
+probabilities are brittle when a model is miscalibrated or highly 
+ignorant. This gap motivates the primary contribution of this thesis.
+Instead of computing SE on a single distribution, we propose computing
+it across a \textbf{Credal Set of distributions} generated by a valid
+range of temperatures. By analyzing how semantic cluster probabilities
+fluctate across this set, yielding upper and lower cluster bounds, we
+detect epistemic uncertainty that standard SE is blind to.
+
+
+\section{Credal Prediction based on Relative Likelihood}
+\label{sec:related_work:credal_prediction}
+While SE addresses the issue of lexical equivalence in LLMs, it lacks
+a mechanism to handle severe epistemic uncertainty arising from a
+poorly calibrated, single probability distribution. To address this,
+we look to recent advancements in the field of imprecise probabilities,
+specifically the application of Credal Sets to deep learning.
+
+\subsection{Relative Likelihood Ensembles}
+\label{sec:related_work:credal_prediction:rel_ll_ensembles}
+Recently, \textcite{löhr2025credalpredictionbasedrelative}
+proposed a theoretically grounded approach to credal prediction
+based on the statistical notion of relative likelihood. Instead
+of relying on a single maximum likelihood estimator (MLE),
+their framework defines the prediction target as a credal set induced 
+by all plausible models whose relative likelihood exceeds a specific 
+threshold $\alpha$ (the $\alpha$-cut). Specifically, they introduce the
+Credal Relative Likelihood ($CreRL_\alpha$) method, which trains an 
+ensemble of neural networks using an early-stopping strategy. Each 
+model in the ensemble is trained until it reaches a sprecific relative 
+likelihood threshold $\tau_i$, ensuring that the final ensemble spans
+the entire valid $\alpha$-cut.
+To guarantee diversity among the ensemble members, they further employ
+a novel "ToBias" initialization strategy, which initializes the 
+models to predict degenerate distributions at the vertices of the 
+probability simplex. 
+
+
+\subsection{Bridging the Gap: From Ensembles to LLM Temperatures}
+\label{sec:related_work:credal_prediction:bridge}
+The $CreRL_\alpha$ framework successfully demonstrates that relative
+likelihood can be used to construct robust credal sets, achieving
+superior coverage on standard classifiction benchmarks. However, this
+approach, like other credal deep learning models (e.g., Credal 
+Bayesian Neural Networks), is designed for standard discriminative 
+classification tasks where the model weights are optimized during 
+training. 
+
+Applying this weight-space ensemble directly to modern LLMs is 
+computationally prohibitive due to their massive size, and it does
+not cleanly translate to the autoregressive, open-ended generation
+of sequences.

@@ -11,15 +11,8 @@ extend semantic entropy to operate over this credal set, yielding
 robust upper and lower uncertainty bounds that serve as a signal 
 for hallucination detection.
 
-
 \section{Overview of the Pipeline}
 \label{sec:methodology:overview}
-\begin{figure}
-    \includegraphics[width=\textwidth]{drawio/CredalSemanticEntropyClusterProbabilities.pdf}
-    \caption{Visualization of the first three steps of our methodology. }
-    \label{fig:methodology:pipeline_overview}
-\end{figure}
-
 Our proposed methodology, which we term Credal Semantic Entopy,
 works for a given input prompt $x$ (a question and optional context), 
 in four sequential stages:
@@ -59,6 +52,12 @@ in four sequential stages:
 	bounds. This final scalar value is used to predict whether 
 	the model is hallucinating.
 \end{enumerate}
+
+\begin{figure}
+    \includegraphics[width=\textwidth]{drawio/CredalSemanticEntropyClusterProbabilities.pdf}
+    \caption{Visualization of the first three steps of our methodology. }
+    \label{fig:methodology:pipeline_overview}
+\end{figure}
 
 The following sections formally define the mathematical and 
 computational mechanics of each stage in this pipeline.

@@ -340,16 +340,16 @@
             <mxPoint x="950" y="350" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="nFCmkSNhNtT1f-w3izgH-158" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;fontSize=14;fontColor=#82B366;" value="$$\text{Berlin}: [0.75, 0.9]$$" vertex="1">
+        <mxCell id="nFCmkSNhNtT1f-w3izgH-158" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=right;verticalAlign=middle;rounded=0;fontSize=14;fontColor=#82B366;" value="$$\text{Berlin}: [0.75, 0.9]$$" vertex="1">
           <mxGeometry height="35" width="150" x="1010" y="224.75" as="geometry" />
         </mxCell>
-        <mxCell id="nFCmkSNhNtT1f-w3izgH-159" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;fontSize=14;fontColor=#6C8EBF;" value="$$\text{Vienna}: [0.1, 0.15]$$" vertex="1">
+        <mxCell id="nFCmkSNhNtT1f-w3izgH-159" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=right;verticalAlign=middle;rounded=0;fontSize=14;fontColor=#6C8EBF;" value="$$\text{Vienna}: [0.1, 0.15]$$" vertex="1">
           <mxGeometry height="30" width="150" x="1010" y="254.75" as="geometry" />
         </mxCell>
-        <mxCell id="nFCmkSNhNtT1f-w3izgH-160" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;fontSize=14;fontColor=#D79B00;" value="$$\text{London}: [0.0, 0.08]$$" vertex="1">
+        <mxCell id="nFCmkSNhNtT1f-w3izgH-160" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=right;verticalAlign=middle;rounded=0;fontSize=14;fontColor=#D79B00;" value="$$\text{London}: [0.0, 0.08]$$" vertex="1">
           <mxGeometry height="30" width="150" x="1010" y="284.75" as="geometry" />
         </mxCell>
-        <mxCell id="nFCmkSNhNtT1f-w3izgH-161" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;fontSize=14;fontColor=#B85450;" value="$$\text{Munich}: [0.0, 0.02]$$" vertex="1">
+        <mxCell id="nFCmkSNhNtT1f-w3izgH-161" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=right;verticalAlign=middle;rounded=0;fontSize=14;fontColor=#B85450;" value="$$\text{Munich}: [0.0, 0.02]$$" vertex="1">
           <mxGeometry height="30" width="150" x="1010" y="314.75" as="geometry" />
         </mxCell>
       </root>

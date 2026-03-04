@@ -14,6 +14,16 @@ for hallucination detection.
 
 \section{Overview of the Pipeline}
 \label{sec:methodology:overview}
+\begin{figure}
+    \includegraphics[width=\textwidth]{drawio/.pdf}
+    \caption{Visualization of Semantic Clustering for the question 
+    "What is the capital of Germany?". After the generation of seven 
+    answer strings, they are semantically clustered and afterwards the
+    the cluster probabilities are computed as shown in 
+    \ref{eq:cluster_probability}.}
+    \label{fig:related_work:semantic_entropy:semantic_clustering}
+\end{figure}
+
 Our proposed methodology, which we term Credal Semantic Entopy,
 works for a given input prompt $x$ (a question and optional context), 
 in four sequential stages:

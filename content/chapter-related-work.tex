@@ -121,7 +121,7 @@ used the DeBERTa-large-MNLI model
 \subsection{Computing the Semantic Entropy}
 \label{sec:related_work:semantic_entropy:computing}
 Once the sequences are clustered, the probability of a specific meaning
-(a cluster $c_k \in C$) is computetd by marginalizing over the 
+(a cluster $c_k \in C$) is computed by marginalizing over the 
 probabilities of all individual lexical sequences within that cluster.
 The cluster probability is given by:
 \begin{equation}
@@ -130,8 +130,12 @@ The cluster probability is given by:
 \end{equation}
 
 \begin{figure}
-    \includegraphics[width=\textwidth]{drawio/SemanticEntropy.png}
-    \caption{Visualization of Semantic Clustering}
+    \includegraphics[width=\textwidth]{drawio/SemanticEntropy.pdf}
+    \caption{Visualization of Semantic Clustering for the question 
+    "What is the capital of Germany?". After the generation of seven 
+    answer strings, they are semantically clustered and afterwards the
+    the cluster probabilities are computed as shown in 
+    \ref{eq:cluster_probability}.}
     \label{fig:related_work:semantic_entropy:semantic_clustering}
 \end{figure}
 

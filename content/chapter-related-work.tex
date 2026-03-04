@@ -25,7 +25,7 @@ massive models.
 Initial approaches to estimating LLM uncertainty directly adapted
 standard classificatoin metrics or relied on heuristic comparisons.
 These traditional baselines generally fall into three categories: 
-predictive entorpy, lexical similarity and self-evaluation.
+predictive entropy, lexical similarity and self-evaluation.
 
 \textbf{Predictive Entropy Methods} \\
 The most straightforward methods evaluate the model's confidence 
@@ -33,7 +33,7 @@ using the probability distributions generated during decoding.
 Token-level entropy evaluates local uncertainty but fails to capture
 the holistic confidence of a factual claim. To address this,  
 \textcite{malinin2021uncertaintyestimationautoregressivestructured}
-proposed sequence-level predictive entorpy (often implemented as 
+proposed sequence-level predictive entropy (often implemented as 
 length-normalized entropy), which estimates uncertainty across all
 possible output sequences. However, because these methods operate
 strictly on exact token matches, they artificially inflate uncertainty
@@ -56,9 +56,10 @@ meaning, leading to false uncertainty signals.
 
 \textbf{Self-Evaluation} \\
 Another distinct approach treats the LLM as an independent evaluator of
-its own uncertainty. Methods like $p(\text{True})$ prompt the model 
+its own uncertainty. Methods like $p(\text{True})$ 
+\parencite{kadavath2022languagemodelsmostlyknow} prompt the model 
 to evaluate its own generated answer or ask it directly if a proposed 
-fact is correct \parencite{kadavath2022languagemodelsmostlyknow}.
+fact is correct.
 While intuitive, self-evaluation baselines are highly sensitive
 to the specific phrasing of the prompt. 
 

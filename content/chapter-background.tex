@@ -227,7 +227,7 @@ epistemic uncertainty.
 \label{sec:background:uncertainty}
 As LLMs are increasingly deployed in real-world and high-stakes
 applications, for example in healthcare
-\parencite{10.1007/978-3-031-66535-6_17}, 
+\parencite{10.1001/jama.2024.21700},
 their reliability becomes a critical concern.
 A fundamental challenge with deep neural networks, including LLMs,
 is that they are prone to overconfidence. They frequently assign
@@ -404,41 +404,92 @@ with a set of plausible distributions
 \parencite{Levi1980-LEVTEO-7, Walley1991-WALSRW}.
 A closed, convex set of probability distributions is known as a 
 \textbf{credal set} \parencite{COZMAN2000199}, denoted by 
-$Q$. 
+$\mathcal{K}$. 
+
+
+\subsection{The Geometry of Credal Sets}
+\label{sec:background:credal_sets:geometry}
+A credal set $\mathcal{K}$ is geometrically represented as a closed, 
+convex subset of the standard probability simplex $\Delta$. 
+For a classification task with $K$ possible classes 
+$c_1, c_2, \dots, c_K$ (or semantic clusters), 
+the standard simplex $\Delta_K$ is defined as
+\parencite{https://doi.org/10.1002/bimj.4710300705}:
+
+\begin{equation}
+    \Delta_K = \left\{ \mathcal{P} \in \mathbb{R}^K \mid 
+	\forall k: \mathcal{P}_k \geq 0, \sum_{k=1}^K \mathcal{P}_k = 1
+	\right\} 
+    \label{eq:simplex}
+\end{equation}
+
+In standard Bayesian inference, a precise probability distribution
+is a single point within this simplex. In contrast, a credal set 
+represents a region of points.
+
+\textbf{Interval-Valued Probabilities} \\
+One of the most common and practical ways to define this region is  
+through \textbf{probability intervals}. Instead of assigning a precise
+value $P(c_k)$, we assign a lower bound $\underline{P}(c_k)$ and an
+upper bound $\overline{P}(c_k)$ to each class $c_k$
+\parencite{article}.
+
+The credal set induced by these intervals is the set of all 
+distributions consistent with these bounds:
+
+\begin{equation}
+    \mathcal{K} = \left\{ P \in \Delta_K \mid \underline{P} (c_k) 
+	\leq P(c_k) \leq \overline{P}(c_k), \sum_{k=1}^{K} P(c_k) = 1 
+	\right\}
+    \label{eq:probability_interval_credal_set}
+\end{equation}
+
+Geometrically, these linear constraints form a \textbf{convex polytope}
+within the simplex
+\parencite{article}.
+
+If the intervals are wide (high epistemic uncertainty), the polytope
+covers a large volume of the simplex. If the intervals are narrow
+(low uncertainty), the polytopes shrinks toward a single point.
+This geometric interpretation is fundamental to understanding how
+we quantify uncertainty in chapter \ref{sec:methodology}.
 
 
 \subsection{Computing Uncertainty on Credal Sets}
-\label{sec:backgound:credal_sets:uncertainty}
+\label{sec:background:credal_sets:uncertainty}
 To quantify the total uncertainty of a model's prediction 
 using a credal set, we must extend standard metrics like 
 Shannon Entropy to operate over sets of distributions.
-Since we have a set of probability distributions $Q$, 
+Since we have a set of probability distributions $\mathcal{K}$, 
 we can determine the \textbf{lower entropy} and  
-\textbf{upper entropy} by finding the minimum and maximum entropy 
+\textbf{upper entropy} \parencite{ABELLAN2005235} 
+by finding the minimum and maximum entropy 
 values across the set \parencite{Abellán01022006, H_llermeier_2021}:
 
 \begin{equation}
-    H_*(Q) = \min_{q \in Q} H(q), \quad H^*(Q) = \max_{q \in Q} H(q)
+    H_*(\mathcal{K}) = \min_{q \in \mathcal{K}} H(q), 
+	\quad H^*(\mathcal{K}) = \max_{q \in \mathcal{K}} H(q)
     \label{eq:lower_upper_entropy}
 \end{equation}
 
-We can use these bounds to quantify total uncertainty $U(Q)$, 
-aleatoric uncertainty $AU(Q)$ and epistemic uncertainty $EU(Q)$ 
-\parencite{Abellán01022006, H_llermeier_2021}:
+We can use these bounds to quantify total uncertainty $U(\mathcal{K})$,
+aleatoric uncertainty $AU(\mathcal{K})$ and epistemic uncertainty 
+$EU(\mathcal{K})$ \parencite{Abellán01022006, H_llermeier_2021}:
 
 \begin{equation}
-    U(Q) = AU(Q) + EU(Q)
+    U(\mathcal{K}) = AU(\mathcal{K}) + EU(\mathcal{K})
     \label{eq:credal_total_uncertainty}
 \end{equation}
 
 \begin{equation}
-    H^*(Q) = H_*(Q) + \left(H^*(Q) - H_*(Q)\right)
+    H^*(\mathcal{K}) = H_*(\mathcal{K}) + 
+	\left(H^*(\mathcal{K}) - H_*(\mathcal{K})\right)
     \label{eq:credal_uncertainty}
 \end{equation}
 
-Here, upper entropy represents total uncertainty, lower entropy
-represents aleatoric uncertainty and the difference between 
-them is used as a measure for epistemic uncertainty. 
+Here, upper entropy represents total uncertainty \parencite{ABELLAN2005235},
+lower entropy represents aleatoric uncertainty and the difference 
+between them is used as a measure for epistemic uncertainty. 
 
 
 \section{Relative Likelihood and Valid Temperature Sets}
@@ -487,7 +538,7 @@ set is formally referred to as an \textbf{$\alpha$-cut}
 \parencite{epub31329}:
 
 \begin{equation}
-    \mathcal{C}_\alpha = 
+    \mathcal{T}_\alpha = 
     \{\tau \in \mathcal{T} : \gamma(\tau) \geq \alpha \}
     \label{eq:alpha_cut}
 \end{equation}

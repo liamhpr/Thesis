@@ -1,40 +1,44 @@
 % !TEX root = ../main.tex
 %
-\chapter{Example Appendix}
+\chapter{Appendix}
 \label{sec:appendix}
 
-\Blindtext[1][1]
+\section{Experimental Details}
+\label{sec:appendix:exp_details}
+\section{Experimental Details}
+\label{sec:appendix:exp_details}
 
-\section{Appendix Section 1}
-\label{sec:appendix:sec1}
+Our implementation builds upon the codebase provided by 
+\textcite{kuhn2023semanticuncertaintylinguisticinvariances}. 
+We utilize the HuggingFace Transformers library to implement 
+both the generative model (OPT-2.7B, \citealp{zhang2022opt}) and the 
+entailment model (DeBERTa-large-mnli, 
+\citealp{he2021debertadecodingenhancedbertdisentangled}).
 
-\Blindtext[1][1]
+To ensure a fair comparison, we replicate the generation parameters 
+used in the baseline studies. The generation process is divided into 
+two distinct phases using the \texttt{generate()} function:
 
-\begin{table}[h]
-	\begin{tabularx}{\textwidth}{X | X | X}
-		%\hline
-		Alpha		& Beta			& Gamma			\\ \hline
-		0			& 1				& 2				\\ \hline
-		3			& 4				& 5				\\ %\hline
-	\end{tabularx}
-	\label{tab:table1}
-	\caption{This is a caption text.}
-\end{table}
+\textbf{Primary Answer Generation:}
+To produce the model's "best guess" prediction 
+(which is evaluated against the ground truth), we employ beam search 
+with sampling enabled. Specifically, we set the beam size to 5 
+(\texttt{num\_beams=5}) and enable multinomial sampling 
+(\texttt{do\_sample=True}).
 
-\section{Appendix Section 2}
-\label{sec:appendix:sec2}
+\textbf{Uncertainty Estimation Sampling:}
+To generate the diverse set of sequences required for computing 
+semantic entropy and our proposed credal metrics, we disable beam 
+search (\texttt{num\_beams=1}) and rely solely on multinomial sampling 
+(\texttt{do\_sample=True}). Following the findings of 
+\textcite{kuhn2023semanticuncertaintylinguisticinvariances}, 
+who demonstrated that uncertainty estimation performance saturates 
+beyond a small number of samples, we generate $N=10$ stochastic 
+sequences per question.
 
-\Blindtext[1][1]
+The experiments run on one 80GB NVIDIA A100.
 
-\begin{table}[h]
-	\begin{tabularx}{\textwidth}{X | X | X}
-		%\hline
-		Alpha		& Beta			& Gamma			\\ \hline
-		0			& 1				& 2				\\ \hline
-		3			& 4				& 5				\\ %\hline
-	\end{tabularx}
-	\label{tab:table2}
-	\caption{This is a caption text.}
-\end{table}
 
-\Blindtext[1][2]
+\section{Declaration of LLM Usage}
+Large Language Models (LLMs) were used to support several stages of this work. Their assistance included co-coding and troubleshooting during development, helping to brainstorm approaches and refine ideas, and providing guidance for resolving code bugs. LLMs were also used to improve the clarity of written content by correcting spelling, grammar, and phrasing. All substantive decisions, analysis, and final interpretations were made by the author.
+

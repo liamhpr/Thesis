@@ -1,0 +1,130 @@
+% !TEX root = ../main.tex
+%
+\chapter{Experiments}
+\label{sec:experiments}
+To validate the effectiveness of our proposed Credal Semantic
+Entropy method, we conducted a series of experiments on a 
+standard free-form Question Answering (QA) benchmark.
+The primary objective of these experiments is to evaluate
+whether quantifying epistemic uncertainty via valid 
+temperatures provides a more reliable signal for hallucination
+detection than standard single-point metrics.
+
+
+\section{Experimental Setup}
+\label{sec:experiments:setup}
+
+\subsection{Dataset: CoQA}
+\label{sec:experiments:setup:coqa}
+We utilized the \textbf{Conversational Question Answering (CoQA)} 
+dataset \parencite{reddy2019coqaconversationalquestionanswering}
+for our evaluation. CoQA is a large-scale dataset for building
+Conversational Question Answering systems. It contains 127k+ 
+questions with answers obtained from 8k+ conversations about 
+text passages from seven diverse domains 
+\parencite{reddy2019coqaconversationalquestionanswering}.
+
+For our specific task of hallucination detection, we followed the 
+experimental protocol established by 
+\textcite{kuhn2023semanticuncertaintylinguisticinvariances}.
+We used the development split of CoQA, which provides a diverse 
+set of questions. The dataset was split into a \textbf{calibration set} 
+(used to determine the valid temperature set) and a \textbf{test set}
+(used to evaluate the final uncertainty metrics).
+
+
+\subsection{Model Architecture}
+\label{sec:experiments:setup:model}
+All experiments were conducted using the \textbf{Opt-6.7B} model
+\parencite{zhang2022opt}. OPT (Open Pre-trained Transfomer) is a 
+decoder-only architecture that replicates the performance and 
+behaviour of GPT-3 \parencite{brown2020languagemodelsfewshotlearners}.
+We chose the 6.7B parameter variant as it strikes a balance between
+computational feasibility and the capability to generate coherent text.
+
+For the semantic clustering step, we employed a \textbf{DeBERTa-large-MNLI}
+model \parencite{he2021debertadecodingenhancedbertdisentangled} to assess
+bidirectional entailment between generated answers.
+
+\subsection{Baselines}
+\label{sec:experiments:setup:baselines}
+We compared our proposed \textbf{Credal Semantic Entropy (Credal SE)}
+against several strong baselines:
+
+\begin{itemize}
+	\item \textbf{Length-Normalized NLL}: The average negative 
+	    log-likelihood of the generated sequence, serving as the 
+	    standard measure of model confidence.
+
+	\item \textbf{Standard Semantic Entropy (SE)}: The original
+	    metric proposed by 
+	    \textcite{kuhn2023semanticuncertaintylinguisticinvariances},
+
+	\item \textbf{Lexical Similarity (ROUGE-L)}: A metric that 
+	    measures the lexical overlap between multiple sampled answers, 
+	    serving as a proxy for certainty without semantic clustering
+	    \parencite{lin-2004-rouge}.
+
+	\item \textbf{Predictive Entropy}: The standard entropy of the 
+	    model's output distribution over the sequence of tokens.
+	    Unlike semantic entropy, this metric considers every lexical 
+	    variation as a distinct outcome, calculating uncertainty
+	    directly on the raw strings without semantic clustering
+	    \parencite{malinin2021uncertaintyestimationautoregressivestructured}.
+\end{itemize}
+
+\subsection{Evaluation Metric: AUROC}
+\label{sec:experiments:setup:evaluation}
+To quantify the performance of each uncertainty method, we treat
+hallucination detection as a binary classification problem. The core
+task is to determine if the uncertainty score can reliably distinguish
+between correct and incorrect model generations.
+
+\textbf{Ground Truth Labeling} \\
+To establish the ground-truth labels for our experiments, we compare the
+generated answers against the gold-standard reference answer provided in 
+the CoQA dataset. We define correctness based on lexical overlap using  
+the \textbf{ROUGE} metric (Recall-Oriented Understudy for Gisting Evaluation) 
+\parencite{lin-2004-rouge}. Specifically, 
+a generated answer is labeled as:
+
+\begin{itemize}
+	\item \textbf{Correct}: If the ROUGE-L score between the 
+	    generation and the reference is strictly greater than $0.3$.
+
+	\item \textbf{Incorrect}: If the ROUGE-L score is less than or 
+	    equal to $0.3$.
+\end{itemize}
+
+This threshold allows for minor phrasing differences while ensuring
+that the core semantic content overlaps significantly with the reference.
+
+\textbf{AUROC Calculation} \\
+We report the 
+\textbf{Area Under the Receiver Operating Characteristic cure (AUROC)}
+\parencite{BRADLEY19971145}.
+The AUROC represents the probability that a randomly selected incorrect 
+answer (hallucination) will have a higher uncertainty score than a randomly 
+selected correct answer.
+
+\begin{itemize}
+    \item $\text{AUROC} = 0.5$: Indicates random performance 
+	(no better than a coin flip)
+
+    \item $\text{AUROC} = 1.0$: Indicates perfect detection 
+	(all hallucinations have higher uncertainty scores than all 
+	correct answers).
+\end{itemize}
+
+\section{Results}
+\begin{table}[h]
+    \begin{tabularx}{\textwidth}{X | X | X}
+	    %\hline
+	    Alpha		& Beta		& Gamma	\\ \hline
+	    0			& 1		& 2	\\ \hline
+	    3			& 4		& 5	\\ %\hline
+    \end{tabularx}
+    \label{tab:table1}
+    \caption{This is a caption text.}
+\end{table}
+

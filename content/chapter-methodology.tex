@@ -55,7 +55,13 @@ in four sequential stages:
 
 \begin{figure}
     \includegraphics[width=\textwidth]{drawio/CredalSemanticEntropyClusterProbabilities.pdf}
-    \caption{Visualization of the first three steps of our methodology. }
+    \caption{Visualization of the first three stages of our 
+    methodology. The process 
+    begins with multi-temperature generation, followed by semantic 
+    clustering performed on the union of all generated sequences. 
+    Finally, the probability mass of each cluster is marginalized at 
+    every temperature to establish the robust probability intervals 
+    used for uncertainty quantification.}
     \label{fig:methodology:pipeline_overview}
 \end{figure}
 

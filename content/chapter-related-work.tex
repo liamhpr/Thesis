@@ -218,12 +218,14 @@ probability simplex.
 The $CreRL_\alpha$ framework successfully demonstrates that relative
 likelihood can be used to construct robust credal sets, achieving
 superior coverage on standard classifiction benchmarks. However, this
-approach, like other credal deep learning models (e.g., Credal 
-Bayesian Neural Networks), is designed for standard discriminative 
-classification tasks where the model weights are optimized during 
-training. 
+approach relies on optimizing model weights during training.
+Applying this weight-space ensemble approach directly to modern LLMs 
+is computationally prohibitive. Training multiple copies of a 
+multi-billion parameter model to convergence is infeasible for most
+applications. It also does not cleanly translate to the autoregressive,
+open-ended generation of sequences.
 
-Applying this weight-space ensemble directly to modern LLMs is 
-computationally prohibitive due to their massive size, and it does
-not cleanly translate to the autoregressive, open-ended generation
-of sequences.
+This limitation motivates the core innovation of our thesis. Shifting 
+the the uncertainty quantification from the \textit{weight space}
+(ensembling models) to the \textit{decoding space} 
+(ensmbling temperature).

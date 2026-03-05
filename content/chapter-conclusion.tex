@@ -3,19 +3,28 @@
 \chapter{Conclusion}
 \label{sec:conclusion}
 
-\Blindtext[2][1]
 
 \section{System Section 1}
 \label{sec:conclusion:sec1}
 
-\Blindtext[2][2]
 
 \section{System Section 2}
 \label{sec:conclusion:sec2}
 
-\Blindtext[3][2]
 
 \section{Future Work}
 \label{sec:conclusion:future}
-
-\Blindtext[2][2]
+It would be interesting to see how this method performs on other tasks,
+like TriviaQA \parencite{joshi2017triviaqalargescaledistantly}, 
+SQuAD \parencite{rajpurkar2018knowdontknowunanswerable} or some medical
+or legal dataset like medQA \parencite{jin2020diseasedoespatienthave}
+where epistemic uncertainty carries higher risk
+and also when implemented using better models, like 
+GPT 5 \parencite{singh2025openaigpt5card} or 
+Gemini \parencite{geminiteam2025geminifamilyhighlycapable}.
+Another interesting strategy would be to not only focus on the 
+temperature but on the decoding method itself. By sampling answers 
+using Beam Search, Nucleus (Top-p) sampling 
+\parencite{holtzman2020curiouscaseneuraltext}, 
+Top-k sampling \parencite{fan2018hierarchicalneuralstorygeneration} 
+and temperature sampling could also be another interesting method.

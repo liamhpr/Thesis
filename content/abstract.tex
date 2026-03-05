@@ -5,10 +5,25 @@
 \label{sec:abstract}
 \vspace*{-10mm}
 
-\blindtext
+Accurately quantifying uncertainty in Large Language Models (LLMs) is 
+crucial for their deployment in safety-critical domains. However, 
+standard uncertainty estimation methods typically rely on a single 
+probability distribution defined by fixed decoding hyperparameters. 
+We argue that this "point-estimate" approach fails to adequately 
+capture epistemic uncertainty, often conflating benign linguistic 
+diversity with factual ignorance.
+In this thesis, we introduce \textit{Credal Semantic Entropy}, a 
+rigorous framework for hallucination detection grounded in the theory 
+of Imprecise Probabilities. We propose a method to construct Credal 
+Sets—convex sets of probability distributions—based on the statistical 
+notion of relative likelihood. Instead of relying on a single 
+temperature, we identify a set of statistically valid temperatures 
+that maximize the likelihood of calibration data. We then aggregate 
+generated sequences into semantic clusters and derive interval-valued 
+probabilities  for each meaning. By computing the Upper Semantic 
+Entropy over these intervals, we obtain a worst-case estimate of 
+uncertainty that is robust to hyperparameter volatility.
+
+\textbf{RESULTS ARE MISSING}
 
 \vspace*{20mm}
-
-{\usekomafont{chapter}Abstract (different language)}\label{sec:abstract-diff} \\
-
-\lipsum[1]

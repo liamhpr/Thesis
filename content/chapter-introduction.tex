@@ -20,12 +20,15 @@ statements, a phenomenon widely known as hallucinations
 \parencite{Huang2023ASO}.
 
 For high-stakes applications, accuracy alone is insufficient. A 
-system must also be self-aware of its limitations. A doctor or lawyer 
-using an LLM needs to know when the model is uncertain so 
-they can verify the output. Unfortunately, modern LLMs are frequently
-"confidently wrong", assigning high probability scores to their 
-hallucinations due to poor calibration and the nature of their 
-training objectives.
+system must also be self-aware of its limitations 
+\parencite{bommasani2022opportunitiesrisksfoundationmodels}. 
+A doctor or lawyer using an LLM needs to know when the model is 
+uncertain so they can verify the output. Unfortunately, modern LLMs 
+are frequently "confidently wrong", assigning high probability scores 
+to their hallucinations due to poor calibration 
+\parencite{guo2017calibrationmodernneuralnetworks, 
+desai2020calibrationpretrainedtransformers} 
+and the nature of their training objectives \parencite{Ji_2023}.
 
 Standard uncertainty metrics, such as predictive entropy
 \parencite{malinin2021uncertaintyestimationautoregressivestructured}
@@ -64,11 +67,11 @@ model states.
 \section{Contributions}
 \label{sec:intro:contributions}
 This thesis proposes a novel methodology for quantifying epistemic
-uncertainty by bridging the gap between \textit{Imprecise Probabilities} 
+uncertainty by bridging the gap between Imprecise Probabilities
 and Large Language Model decoding.
 
-Drawing on the theory of \textit{Credal Prediction} based on relative 
-likelihood \parencite{löhr2025credalpredictionbasedrelative}, we 
+Drawing on the theory of \textit{Credal Prediction based on Relative 
+Likelihood} \parencite{löhr2025credalpredictionbasedrelative}, we 
 introduce a statistically rigorous method to construct a Credal Set 
 of semantic distributions. Our specific contributions are as follows: 
 
@@ -95,24 +98,31 @@ of semantic distributions. Our specific contributions are as follows:
 \label{sec:intro:structure}
 The remainder of this thesis is organized as follows: 
 \begin{itemize}
-	\item \textbf{Chapter 2}:
-	    provides the theoretical background on LLMs, 
-	    decoding strategies and the mathematical foundations
-	    of uncertainty (Aleatoric vs. Epistemic) and credal sets.
+	\item \textbf{Chapter 2 Background}:
+	    establishes the theoretical foundations 
+	    necessary for this work. It reviews the architecture of 
+	    Large Language Models, explains autoregressive decoding 
+	    strategies, and introduces the mathematical frameworks of 
+	    Imprecise Probabilities and Credal Sets.
 
-	\item \textbf{Chapter 3}:
-	    reviews related work, focusing on traditional uncertainty 
-	    quantification and the recent development of Semant Entropy.
+	\item \textbf{Chapter 3 Related Work}:
+	    surveys the current landscape of uncertainty 
+	    quantification. It contrasts traditional point-estimate 
+	    methods with recent advancements in semantic consistency, 
+	    specifically focusing on Semantic Entropy as the primary 
+	    baseline for our research.
 
-	\item \textbf{Chapter 4}:
-	    details our methodolgy, formally defining the relative 
-	    likelihood criterion and the algorithm for computing 
-	    Credal Semantic Entropy.
+	\item \textbf{Chapter 4 methodology}:
+	    formalizes our novel contribution: 
+	    \textit{Credal Semantic Entropy}. It details the algorithm 
+	    for selecting valid temperatures via relative likelihood 
+	    and deriving robust uncertainty bounds from 
+	    interval-valued probability distributions.
 
-	\item \textbf{Chapter 5}:
+	\item \textbf{Chapter 5 Experiments}:
 	    presents the experimental setup and results, 
 	    analyzing the performance of our method against strong 
 	    baselines.
 
-	\item \textbf{Chapter 6}:
+	\item \textbf{Chapter 6 Conclusion}:
 \end{itemize}

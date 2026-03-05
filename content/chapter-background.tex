@@ -2,9 +2,13 @@
 %
 \chapter{Background}
 \label{sec:background}
-This chapter will discuss the key concepts essential 
-for understanding this thesis. \dots
-
+This chapter establishes the theoretical and methodological 
+foundations necessary to understand the contributions of this thesis. 
+Our work lies at the intersetion of Natural Language Processing (NLP)
+and robust Uncertainty Quantification (UQ). To rigorously address the 
+problem of hallucination detection, we must first understand the 
+probabilistic nature of modern language models and the limitations 
+of traditional statistical tools.
 
 \section{Large Language Models and Generation}
 \label{sec:background:llms}
@@ -63,13 +67,12 @@ selected at step $t$ is appended to the input for step $t + 1$
 \subsection{Decoding Strategies and the Role of Temperature}
 \label{sec:background:llms:decoding}
 Once the probability distribution over the Vocabulary is computed for 
-the next token, a \textbf{decoding strategy} determines what token will 
+the next token, a \textbf{decoding strategy} determines what token will
 be selected. Common maximization-based strategies include 
 \textbf{Greedy Decoding} or \textbf{Beam Search}.
 \textbf{Greedy Decoding} is the simplest deterministic method. It 
 selects the token with the highest probability mass at the current
-time step $t$
-\parencite{ippolito2019comparisondiversedecodingmethods}:
+time step $t$ \parencite{sutskever2014sequencesequencelearningneural}:
 \begin{equation}
     y_t = \argmax_{y \in \mathcal{V}} P(y \mid \mathbf{y}_{<t}, x)
     \label{eq:greedy_decoding}
@@ -82,7 +85,7 @@ lower-probability initial tokens.
 Furthermore, greedy decoding is known to produce repetitive and 
 generic text, as it fails to account for the diversity and 
 global coherence of the sequence
-\parencite{shi2024thoroughexaminationdecodingmethods}.
+\parencite{wiseman-rush-2016-sequence, holtzman2020curiouscaseneuraltext}.
 
 \textbf{Beam Search} extends Greedy Decoding by maintaining multiple 
 hypotheses at each time step, rather than a single sequence. It 
@@ -91,12 +94,12 @@ which determines the number of candidates to keep.
 At each step $t$, the algorithm expands all $k$ candidates from the 
 previous step by appending every possible next token from the 
 vocabulary $\mathcal{V}$
-\parencite{shi2024thoroughexaminationdecodingmethods}.
+\parencite{freitag-al-onaizan-2017-beam}.
 
 Formally, let $\mathcal{B}_{t-1} = \{\mathbf{y}^{(1)}_{<t}, \dots, 
 \mathbf{y}^{(k)}_{<t}\}$ be the set of $k$ hypothesis sequences 
 generated up to step $t-1$. The algorithm proceeds in three steps
-\parencite{shi2024thoroughexaminationdecodingmethods}:
+\parencite{freitag-al-onaizan-2017-beam}:
 \begin{enumerate}
 	\item \textbf{Expansion}: Each hypothesis in 
 	    $\mathcal{B}_{t-1}$ is extended with every possible token
@@ -136,8 +139,7 @@ generation tasks.
 maximization-based decoding strategies towards stochastic generation.
 Instead of strictly selecting the token with the highest probability, 
 the model randomly draws the next token $y_t$ from the conditional 
-probability distribution $P(y_t \mid \mathbf{y}_{<t}, x)$
-\parencite{shi2024thoroughexaminationdecodingmethods}.
+probability distribution $P(y_t \mid \mathbf{y}_{<t}, x)$.
 
 Formally, at each time step $t$, the next token is sampled according 
 to: 
@@ -179,15 +181,15 @@ confidence of the model's predictions. Unlike Top-$k$ or
 Nucleus Sampling, which truncate the vocabulary, temperature
 scaling modifies the probability distribution itself by rescaling 
 the logits before the Softmax function is applied
-\parencite{shi2024thoroughexaminationdecodingmethods}.
+\parencite{hinton2015distilling}.
 
 Let $z_i$ be the logit for token $v_i$. We introduce a hyperparameter
 $\tau$ > 0, called \textbf{temperature}. 
 The probability of selecting token $v_i$ is then given by:
 \begin{equation}
     P(y_t = v_i \mid \mathbf{y}_{<t}, x; \tau)
-    = \frac{\exp(z_i/\tau)}{\sum_{j \in \mathcal{V}} \exp(z_j/\tau)}
-    \label{eq:Temperature_Scaling}
+    = \frac{\exp(z_i/\tau)}{\sum_{j = 1}^{|\mathcal{V}|} \exp(z_j/\tau)}
+    \label{eq:temperature_scaling}
 \end{equation}
 The value of $\tau$ controls the entropy of the ouptut distribution.
 When choosing a \textbf{low temperature}, $\tau < 1.0$, the 
@@ -201,7 +203,7 @@ likelihood of selecting lower-probability tokens, resulting in
 more diverse but also potentially more incoherent or hallucinatory
 outputs. For the temperature $\tau = 1.0$, the distribution remains
 unchanged, reflecting the model's original logits 
-\parencite{shi2024thoroughexaminationdecodingmethods}.
+\parencite{hinton2015distilling}.
 
 In standard generation tasks, $\tau$ is typically a fixed 
 hyperparameter

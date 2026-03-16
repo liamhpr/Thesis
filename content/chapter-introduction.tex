@@ -8,7 +8,8 @@
 Large Language Models (LLMs) have fundamentally transformed the  
 landscape of Artificial Intelligence, demonstrating unprecedented
 capabilities in natural language understanding, reasoning and 
-generation. 
+generation 
+\parencite{brown2020languagemodelsfewshotlearners, wei2023chainofthoughtpromptingelicitsreasoning}.
 % PROOF:
 LLMs are increasingly deployed in critical domains ranging 
 from healthcare \parencite{10.1001/jama.2024.21700} 
@@ -22,8 +23,7 @@ statements, a phenomenon widely known as hallucinations
 For high-stakes applications, accuracy alone is insufficient. A 
 system must also be self-aware of its limitations 
 \parencite{bommasani2022opportunitiesrisksfoundationmodels}. 
-A doctor or lawyer using an LLM needs to know when the model is 
-uncertain so they can verify the output. Unfortunately, modern LLMs 
+Unfortunately, modern LLMs 
 are frequently "confidently wrong", assigning high probability scores 
 to their hallucinations due to poor calibration 
 \parencite{guo2017calibrationmodernneuralnetworks, 
@@ -67,12 +67,12 @@ model states.
 \section{Contributions}
 \label{sec:intro:contributions}
 This thesis proposes a novel methodology for quantifying epistemic
-uncertainty by bridging the gap between Imprecise Probabilities
-and Large Language Model decoding.
+uncertainty by bridging the gap between imprecise probabilities
+and LLM decoding.
 
 Drawing on the theory of \textit{Credal Prediction based on Relative 
 Likelihood} \parencite{löhr2025credalpredictionbasedrelative}, we 
-introduce a statistically rigorous method to construct a Credal Set 
+introduce a statistically rigorous method to construct a credal set 
 of semantic distributions. Our specific contributions are as follows: 
 
 \begin{itemize}
@@ -101,9 +101,9 @@ The remainder of this thesis is organized as follows:
 	\item \textbf{Chapter 2 Background}:
 	    establishes the theoretical foundations 
 	    necessary for this work. It reviews the architecture of 
-	    Large Language Models, explains autoregressive decoding 
-	    strategies, and introduces the mathematical frameworks of 
-	    Imprecise Probabilities and Credal Sets.
+	    LLMs, explains autoregressive decoding 
+	    strategies, and introduces the mathematical framework of 
+	    imprecise probabilities and credal sets.
 
 	\item \textbf{Chapter 3 Related Work}:
 	    surveys the current landscape of uncertainty 

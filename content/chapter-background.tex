@@ -371,13 +371,13 @@ of reality
 As demonstrated by \textcite{guo2017calibrationmodernneuralnetworks},
 this assumption of a "precise probability" often breaks down in modern
 deep leraning models, including LLMs, which frequently suffer from 
-severe overconfidence and calibration. Furthermore, standard precise
+severe overconfidence and miscalibration. Furthermore, standard precise
 probabilities mathematically struggle to distinguish between
 inherent data noise (aleatoric) and a fundamental lack of 
 knowledge (epistemic) \parencite{H_llermeier_2021}. 
 This failure to capture true epistemic misconfidence
 necessitates ore robust mathematical frameworks, such as
-Imprecise Probabilities and Credal Sets\parencite{Walley1991-WALSRW}.
+imprecise probabilities and credal sets\parencite{Walley1991-WALSRW}.
 
 
 \section{Imprecise Probabilities and Credal Sets}
@@ -497,7 +497,7 @@ between them is used as a measure for epistemic uncertainty.
 \section{Relative Likelihood and Valid Temperature Sets}
 \label{sec:background:rel_ll_and_temp_sets}
 To systematically construct a credal set, we need a rigorous criterion
-to distinguish between plausubile and implausible probability
+to distinguish between plausible and implausible probability
 distributions. Following recent advances in credal prediction
 \parencite{löhr2025credalpredictionbasedrelative}, 
 we achieve this by employing the statistical concept of 

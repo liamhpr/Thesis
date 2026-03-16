@@ -2,29 +2,131 @@
 %
 \chapter{Conclusion}
 \label{sec:conclusion}
+\section{Summary}
+\label{sec:conclusion:summary}
+As LLMs are increasingly deployed in high-stakes domains, their tendency to 
+hallucinate plausible but factual incorrect information remains a critical
+vulnerability. Standard uncertainty quantification methods rely on single,
+precise probability distributions. By mathematically conflating benign
+linguistic diversity (aleatoric uncertainty) and with a genuine lack of
+knowledge (epistemic uncertainty), models frequently appear misleadingly 
+confident in their hallucinations.
+
+To address this theoretical limitation, this thesis introduced
+\textbf{Credal Semantic Entropy}, a novel framework grounded in the theory 
+of imprecise probabilities. We hypothesized that true epistemic uncertainty
+cannot be reliably captured by a single fixed decoding strategy. Instead,
+we shifted the locus of uncertainty estimation from a single 
+"point-estimate" to a \textbf{credal set} - a convex set of plausible 
+probability distributions. Our methodology constructed this set by 
+systematically varying the generation temperature, utilizing the statistical
+concept of \textbf{relative likelihood} to filter out implausible 
+temperatures via an $\alpha$-cut. We then clustered the generated sequences
+by semantic meaning using an auxiliary Natural Language Inference
+model, deriving robust upper and lower probability bounds for every
+fundamental meaning.
+
+We empirically evaluated our approach on the conversational Question 
+Answering benchmark, CoQA, using the OPT-6.7B model. Across multiple 
+temperature grids (20-step and 50-step) and varying $\alpha$ thresholds,
+we compared the upper semantic entropy of our credal set against established
+single-point baselines.
+
+Our empirical results revealed that while the credal framework is 
+theoretically sound, it faces significant practical challenges. Under our 
+tested configurations, strong standard baselines outperformed the proposed
+credal semantic entropy in detecting hallucinations (measured via AUROC).
+%We observed that the performance of the credal approach is highly sensitive to the $\alpha$ threshold, overly restrictive cuts collapse the probability intervals, neutralizing the benefits of the set-based approach.
+
+Ultimately, this thesis successfully establishes a formal mathematical 
+bridge between LLM decoding hyperparameters and imprecise probabilities. 
+It demonstrates that future research must continue to explore interval-based
+uncertainty, particularly by refining semantic clustering techniques,
+isolating the purely epistemic component of the credal set, and optimizing
+computational efficiency.
 
 
-\section{System Section 1}
-\label{sec:conclusion:sec1}
 
-
-\section{System Section 2}
-\label{sec:conclusion:sec2}
+\section{Limitations}
+\label{sec:conclusion:limitations}
+While the proposed credal semantic entropy framework provides a rigorous,
+theoretically grounded approach to hallucination detection, this study is
+subject to several practical and methodological limitations.
+The most significant limitation of our approach is the high computational
+cost incurred during inference.
+Because of these computational demands and the time constraint of this 
+thesis, our empirical evaluation was restricted in scope. We evaluated the
+method on a subset of approximately 2400 queries from a single dataset 
+(CoQA \parencite{guo2021abgcoqa}). Evaluating the method across a wider 
+variety of domains and with
+more granular temperature grids was computationally prohibitive.
+Furthermore all experiments were conducted on the OPT-6.7B
+\parencite{zhang2022opt} model. This
+specific architecture was selected because it is an open-weights 
+("white-box") model, granting full access to token-level logits required 
+for our calculations, while also being small enough to run on accessible 
+hardware without incurring the prohibitive API costs associated with
+proprietary models. However, it remains an open question whether the
+uncertainty dynamics observed in a 6.7-billion parameter model perfectly
+mirrors those of massive, instruction-tuned foundation models (e.g. GPT-4
+\parencite{openai2024gpt4technicalreport}).
 
 
 \section{Future Work}
 \label{sec:conclusion:future}
-It would be interesting to see how this method performs on other tasks,
-like TriviaQA \parencite{joshi2017triviaqalargescaledistantly}, 
-SQuAD \parencite{rajpurkar2018knowdontknowunanswerable} or some medical
-or legal dataset like medQA \parencite{jin2020diseasedoespatienthave}
-where epistemic uncertainty carries higher risk
-and also when implemented using better models, like 
-GPT 5 \parencite{singh2025openaigpt5card} or 
-Gemini \parencite{geminiteam2025geminifamilyhighlycapable}.
-Another interesting strategy would be to not only focus on the 
-temperature but on the decoding method itself. By sampling answers 
-using Beam Search, Nucleus (Top-p) sampling 
-\parencite{holtzman2020curiouscaseneuraltext}, 
-Top-k sampling \parencite{fan2018hierarchicalneuralstorygeneration} 
-and temperature sampling could also be another interesting method.
+While this thesis establishes a rigorous baseline for credal semantic 
+entropy using temperature scaling, several avenues remain for refining 
+the methodology and extending its application. We outline three primary
+directions for future research.
+
+\subsection{Generalization Across Domains and Architecture}
+\label{sec:conclusion:future:generalization}
+Our experiments focused on the CoQA dataset using the OPT-6.7B model.
+To validate the universality of the credal set approach, future work
+should assess performance on:
+
+\begin{itemize}
+    \item \textbf{diverse benchmarks} such as TriviaQA 
+	\parencite{joshi2017triviaqalargescaledistantly} and 
+	SQuAD \parencite{rajpurkar2018knowdontknowunanswerable};
+    \item \textbf{safety-critical domains} like healthcare 
+	(MedQA \citealp{jin2020diseasedoespatienthave}) or legal 
+	analysis, where the cost of epistemic failure is significantly 
+	higher;
+    \item \textbf{state-of-the-art foundation models} such as Gemini 
+	\parencite{geminiteam2025geminifamilyhighlycapable} or 
+	GPT4.
+\end{itemize}
+
+\subsection{Multi-Dimensional Decoding Ensembles}
+\label{sec:conclusion:future:decoding}
+In this work, we constructed the credal set solely by varying the 
+\textit{temperature} parameter. However, the decoding space of modern 
+LLMs is high-dimensional. A natural extension is to define the credal 
+set over a broader range of decoding hyperparameters, including:
+\textbf{Nucleus (Top-p) Sampling} (Varying the cumulative 
+probability threshold \parencite{holtzman2020curiouscaseneuraltext}),
+\textbf{Top-k Sampling} (Varying the vocabulary truncation size 
+\parencite{fan2018hierarchicalneuralstorygeneration}), and
+\textbf{Beam Search} (comparing stochastic sampling against deterministic 
+beam search paths \parencite{freitag-al-onaizan-2017-beam}).
+By defining the $\alpha$-cut over this joint hyperparameter space, we 
+could capture a more holistic view of the model's inherent uncertainty.
+
+\subsection{Methodological Extensions: Ensembles and Black-Box Settings}
+\label{sec:conclusion:future:black_box}
+Finally, the relative likelihood framework could be extended beyond 
+single-model decoding.
+\textbf{Model Ensembles:} Instead of perturbing the temperature of a 
+single model, one could construct a credal set using an ensemble of 
+different model checkpoints or architectures, effectively bridging 
+the gap between our approach and the original parameter-space credal 
+prediction \parencite{löhr2025credalpredictionbasedrelative}.
+\textbf{Discrete Semantic Entropy:} Currently, our method requires 
+access to token-level log-probabilities (White-Box). To extend this 
+method to closed-source "Black-Box" APIs (e.g., Claude 
+\parencite{claude3}, GPT-4 \parencite{openai2024gpt4technicalreport}), 
+future work could integrate \textbf{Discrete Semantic Entropy} 
+\parencite{kuhn2024semanticentropy}, approximating the cluster 
+probabilities using purely text-based sampling without access to 
+internal logits.

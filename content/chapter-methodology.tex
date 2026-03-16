@@ -5,7 +5,7 @@
 This chapter introduces a novel methodology that constructs a 
 credal set for LLMs by dynamically scaling the decoding temperature.
 By treating the temperature hyperparameter as a continuous parameter 
-space and appplying the statistical principles of relative likelihood,
+space and applying the statistical principles of relative likelihood,
 we systematically filter out implausible distributions. We then 
 extend semantic entropy to operate over this credal set, yielding
 robust upper and lower uncertainty bounds that serve as a signal 
@@ -37,17 +37,17 @@ in four sequential stages:
 	We cluster these generated sequences by their meaning
 	over all valid temperatures. 
 
-    \item \textbf{Computation Cluster Probability Bounds}:
+    \item \textbf{Computation of Cluster Probability Bounds}:
 	For each valid temperature, we compute the probability
 	of each semantic cluster. Because the temperature 
 	modulates the entropy of the underlying token 
 	distributions, the probability of a given cluster will 
-	fluctate across the $\alpha$-cut. By finding the 
+	fluctuate across the $\alpha$-cut. By finding the 
 	minimum and maximum probability assigned to each cluster 
 	across all valid temperatures, we establish the lower 
 	and upper bounds for every semantic concept.
 
-    \item \textbf{Quanifying Epistemic Uncertainty}:
+    \item \textbf{Quantifying Epistemic Uncertainty}:
 	Finally, we compute the Upper Shannon Entropy using these 
 	bounds. This final scalar value is used to predict whether 
 	the model is hallucinating.
@@ -104,7 +104,7 @@ where $T_i$ is the length (number of tokens) of the $i$-th target
 sequence. This average NLL serves as our primary metric for evaluating
 how well a specific temperature calibrates the model's output 
 distribution to the true data distribution. We denote the optimal  
-temperature that yields the minimum NLL as $\tau^{ML}$:
+temperature that yields the minimum $\overline{\text{NLL}}$ as $\tau^{ML}$:
 
 \begin{equation}
     \tau^{ML} = \argmin_{\tau \in \mathcal{T}} 
@@ -119,19 +119,20 @@ on the model and dataset, it is difficult to define a universal
 threshold for what constitutes a "good" temperature. To standardize
 this, we map the average NLLs into the relative likelihood space.
 
-As established in \ref{eq:relative_likelihood},
+As established in Equation \ref{eq:relative_likelihood},
 the relative likelihood $\gamma(\tau)$ of any temperature is computed
-by comparing its likelihood to the optimal likelihood 
+by comparing its likelihood $L(\tau)$ to the optimal likelihood 
 $L(\tau^{ML})$. In the logarithmic domain, this is equivalent to
 to the exponentiated difference of their average NLLs:
 
 \begin{equation}
-    \gamma(\tau) = \exp \left( - \left( \overline{\text{NLL}}(\tau) 
+    \gamma(\tau) = \displaystyle\frac{L(\tau)}{L(\tau^{ML})} 
+	= \exp \left( - \left( \overline{\text{NLL}}(\tau) 
 	- \overline{\text{NLL}}(\tau^{ML}) \right) \right)
     \label{eq:nll_relative_likelihood}
 \end{equation}
 
-By definition, the optimal $\tau^{ML}$ has a relative likelihood 
+By definition, the optimal temperature $\tau^{ML}$ has a relative likelihood
 of $\gamma(\tau^{ML}) = 1.0$. All other temperatures $\tau$ will
 have a relative likelihood $\gamma(\tau) \in [0,1]$, explicitly
 quantifying how plausible they are compared to the best performing 
@@ -144,7 +145,7 @@ Following the framework of credal prediction
 we apply an $\alpha$-cut, retaining only those temperatures whose
 relative likelihood meets or exceeds a specified confidence 
 threshold $\alpha \in [0,1]$.
-The final set of valid temperature is formally defined as:
+The final set of valid temperatures is formally defined as:
 
 \begin{equation}
     \mathcal{T}_\alpha = \{ \tau \in \mathcal{T} : 
@@ -158,9 +159,9 @@ The final set of valid temperature is formally defined as:
 Once the set of valid temperatures $\mathcal{T}_\alpha$
 has been established via the train dataset, we apply the methodology 
 to the unseen test queries. For a given input prompt $x$, the goal is
-map the model's raw token outputs into discrete semantic concepts.
+to map the model's raw token outputs into discrete semantic concepts.
 This requires a two-step process. Generating a diverse pool of 
-candidate responses and clutsering them based on semantic equivalence.
+candidate responses and clustering them based on semantic equivalence.
 
 \subsection{Multi-Temperature Sequence Generation}
 \label{sec:methodology:generation:sequence_generation}
@@ -244,15 +245,21 @@ at a particular temperature $\tau$, we assign it a zero probabilty
 mass for that distribution. This ensures that every distribution 
 $P^\tau$ is defined over the same common support $C$, allowing for 
 the direct element-wise comparison required to compute the upper and
-lower probability bounds in the next step.
-
+lower probability bounds in the next step. To compute the sequence
+probability $P^\tau(s \mid x)$, we use the length normalized
+NLL as defined in Equation \ref{eq:average_nll} because we do not want to
+punish longer sequences 
+\parencite{malinin2021uncertaintyestimationautoregressivestructured}. 
+In the case where shorter answers are wanted, as it is in TriviaQA 
+\parencite{joshi2017triviaqalargescaledistantly}, we could use the
+unnormalized NLLs (\ref{eq:nll}) as well.
 
 \subsection{Quantifying Credal Semantic Uncertainty}
 \label{sec:methodology:uncertainty_quantification}
 By scaling the temperature, we observe a range of probabilities for 
 each semantic cluster. We utilize the observed probability 
 fluctuations to establish upper and lower probability bounds for 
-every semantic concept. The \textbf{Credal Set} is then formally
+every semantic concept. The \textbf{credal set} is then formally
 defined as the set of \textit{all} valid probability distributions 
 that respect these element-wise bounds.
 
@@ -277,6 +284,18 @@ These bounds define an interval
 $[\underline{P}(c_k), \overline{P}(c_k)]$ representing the model's 
 epistemic ambiguity regarding the plausibility of meaning $c_k$.
 
+\begin{figure}
+    \includegraphics[width=0.7\textwidth]{gfx/city_classification_intervals.pdf}
+    \caption{Geometric representation of the credal set derived from the 
+    probability intervals established in Figure 
+    \ref{fig:methodology:pipeline_overview}. Each axis of the radar chart 
+    corresponds to a distinct semantic cluster. The blue bars represent the
+    probability intervals (lower to upper bounds) for each class, 
+    illustrating the model's epistemic uncertainty across the potential 
+    predictions. This visualization approach follows [Hof+26].}
+    \label{fig:methodology:visual_probability_bounds}
+\end{figure}
+
 \textbf{Defining the Credal Set} \\
 We construct the credal set $\mathcal{K}$ as the convex set of all 
 probability distributions $P$ over $C$ that are consistent with these
@@ -298,7 +317,7 @@ of probability space supported by the valid relative likelihoods.
 This metric corresponds to the maximum entropy (highest uncertainty)
 attainable by any distribution within the credal set. It serves as 
 our primary signal for hallucination detection 
-\ref{sec:background:credal_sets:uncertainty}, 
+(\ref{sec:background:credal_sets:uncertainty}), 
 identifying cases 
 where the model's interval constraints allow for a highly flat, 
 uniform distribution:
@@ -325,3 +344,4 @@ uncertainty as shown in Section
 For the experimental evaluation in this thesis, we utilize the 
 upper semantic entropy $H^*$, as it provides the most conservative 
 safety guarantee by considering the maximum plausible uncertainty.
+

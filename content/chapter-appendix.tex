@@ -9,7 +9,7 @@
 Our implementation builds upon the codebase provided by 
 \textcite{kuhn2023semanticuncertaintylinguisticinvariances}. 
 We utilize the HuggingFace Transformers library to implement 
-both the generative model (OPT-2.7B, \citealp{zhang2022opt}) and the 
+both the generative model (OPT-6.7B, \citealp{zhang2022opt}) and the 
 entailment model (DeBERTa-large-mnli, 
 \citealp{he2021debertadecodingenhancedbertdisentangled}).
 
@@ -18,7 +18,7 @@ used in the baseline studies. The generation process is divided into
 two distinct phases using the \texttt{generate()} function:
 
 \textbf{Primary Answer Generation:}
-To produce the model's "best guess" prediction 
+To produce the model's ``best guess'' prediction 
 (which is evaluated against the ground truth), we employ beam search 
 with sampling enabled. Specifically, we set the beam size to 5 
 (\texttt{num\_beams=5}) and enable multinomial sampling 
@@ -37,21 +37,23 @@ sequences per question.
 Detailed implementation details and instructions regarding hardware 
 requirements, environment setup,
 and the exact commands required to reproduce the tables and figures
-presented in Section 5 are provided in the repository.
-https://github.com/liamhpr/Credal-Prediction-for-LLMs.git
+presented in Section 5 are provided in the repository (
+\url{https://github.com/liamhpr/Credal-Prediction-for-LLMs.git}).
 
 The experiments run on one 80GB NVIDIA A100.
 
+
+
 For our evaluation, we split the temperature interval $[0.4, 2.2]$ using
 20 and 50 steps. The step size stays consistent and the resulting 
-Temperature spaces can be seen in the two Tables 
+temperature spaces can be seen in the two Tables 
 \ref{tab:twenty_steps_interval}, \ref{tab:fifty_steps_interval} below.
 
 Table \ref{tab:twenty_steps_interval}:
 The temperature interval $[0.4, 2.2]$ split into 20 evenly spaced steps. The
 temperature yielding the maximum average likelihood ($\tau^{ML} = 1.347$) is
-highlighted in bold. In addition the resulting $\alpha$-cuts
-$\mathcal{T}_\alpha$ with $\alpha \in \{0.6, 0.7, 0.8, 0.9\}$.
+highlighted in bold. In addition, the resulting $\alpha$-cuts
+$\mathcal{T}_\alpha$ with $\alpha \in \{0.6, 0.7, 0.8, 0.9\}$ are shown.
 \begin{table}[h]
     \centering
     \begin{tabular}{p{0.85\textwidth}}
@@ -79,8 +81,8 @@ $\mathcal{T}_\alpha$ with $\alpha \in \{0.6, 0.7, 0.8, 0.9\}$.
 Table \ref{tab:fifty_steps_interval}:
 The temperature interval $[0.4, 2.2]$ split into 50 evenly spaced steps. The
 temperature yielding the maximum average likelihood ($\tau^{ML} = 1.392$) is
-highlighted in bold. In addition the resulting $\alpha$-cuts
-$\mathcal{T}_\alpha$ with $\alpha \in \{0.7, 0.8, 0.9\}$.
+highlighted in bold. In addition, the resulting $\alpha$-cuts
+$\mathcal{T}_\alpha$ with $\alpha=0.9$ are shown.
 \begin{table}[h]
     \centering
     \begin{tabular}{p{0.9\textwidth}}
@@ -95,10 +97,6 @@ $\mathcal{T}_\alpha$ with $\alpha \in \{0.7, 0.8, 0.9\}$.
     \midrule
     $\mathcal{T}_{0.9} = \{ 1.208, \dots, 1.576 \}$ \quad \quad
     $|\mathcal{T}_{0.9}| = 11$\\
-    $\mathcal{T}_{0.8} = \{ 1.135, \dots, 1.686\}$ \quad \quad
-    $|\mathcal{T}_{0.8}| = 16$\\
-    $\mathcal{T}_{0.7} = \{ 1.061, \dots, 1.759 \}$ \quad \quad
-    $|\mathcal{T}_{0.7}| = 20$ \\
     \bottomrule
     \end{tabular}
     \caption{}

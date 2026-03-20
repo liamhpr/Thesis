@@ -5,10 +5,10 @@
 \section{Summary}
 \label{sec:conclusion:summary}
 As LLMs are increasingly deployed in high-stakes domains, their tendency to 
-hallucinate plausible but factual incorrect information remains a critical
+hallucinate plausible but factually incorrect information remains a critical
 vulnerability. Standard uncertainty quantification methods rely on single,
 precise probability distributions. By mathematically conflating benign
-linguistic diversity (aleatoric uncertainty) and with a genuine lack of
+linguistic diversity (aleatoric uncertainty) with a genuine lack of
 knowledge (epistemic uncertainty), models frequently appear misleadingly 
 confident in their hallucinations.
 
@@ -17,13 +17,13 @@ To address this theoretical limitation, this thesis introduced
 of imprecise probabilities. We hypothesized that true epistemic uncertainty
 cannot be reliably captured by a single fixed decoding strategy. Instead,
 we shifted the locus of uncertainty estimation from a single 
-"point-estimate" to a \textbf{credal set} - a convex set of plausible 
+``point-estimate'' to a \textbf{credal set} - a convex set of plausible 
 probability distributions. Our methodology constructed this set by 
 systematically varying the generation temperature, utilizing the statistical
 concept of \textbf{relative likelihood} to filter out implausible 
 temperatures via an $\alpha$-cut. We then clustered the generated sequences
 by semantic meaning using an auxiliary Natural Language Inference
-model, deriving robust upper and lower probability bounds for every
+model, deriving upper and lower probability bounds for every
 fundamental meaning.
 
 We empirically evaluated our approach on the conversational Question 
@@ -35,35 +35,35 @@ single-point baselines.
 Our empirical results revealed that while the credal framework is 
 theoretically sound, it faces significant practical challenges. Under our 
 tested configurations, strong standard baselines outperformed the proposed
-credal semantic entropy in detecting hallucinations (measured via AUROC).
+credal semantic entropy in uncertainty quantification (measured via AUROC).
 %We observed that the performance of the credal approach is highly sensitive to the $\alpha$ threshold, overly restrictive cuts collapse the probability intervals, neutralizing the benefits of the set-based approach.
 
-Ultimately, this thesis successfully establishes a formal mathematical 
-bridge between LLM decoding hyperparameters and imprecise probabilities. 
-It demonstrates that future research must continue to explore interval-based
-uncertainty, particularly by refining semantic clustering techniques,
-isolating the purely epistemic component of the credal set, and optimizing
-computational efficiency.
-
+In conclusion, this thesis provides a formal theoretical 
+connection between language model decoding hyperparameters and
+imprecise probabilities. Building upon this foundation,
+future research can continue to advance interval-based 
+uncertainty quantification.
 
 
 \section{Limitations}
 \label{sec:conclusion:limitations}
 While the proposed credal semantic entropy framework provides a rigorous,
-theoretically grounded approach to hallucination detection, this study is
+theoretically grounded approach to uncertainty quantification,
+this study is
 subject to several practical and methodological limitations.
 The most significant limitation of our approach is the high computational
 cost incurred during inference.
 Because of these computational demands and the time constraint of this 
 thesis, our empirical evaluation was restricted in scope. We evaluated the
 method on a subset of approximately 2400 queries from a single dataset 
-(CoQA \parencite{guo2021abgcoqa}). Evaluating the method across a wider 
+(CoQA \parencite{guo2021abgcoqa}) with only one seed. 
+Evaluating the method across a wider 
 variety of domains and with
 more granular temperature grids was computationally prohibitive.
-Furthermore all experiments were conducted on the OPT-6.7B
+Furthermore, all experiments were conducted on the OPT-6.7B
 \parencite{zhang2022opt} model. This
 specific architecture was selected because it is an open-weights 
-("white-box") model, granting full access to token-level logits required 
+(``white-box'') model, granting full access to token-level logits required 
 for our calculations, while also being small enough to run on accessible 
 hardware without incurring the prohibitive API costs associated with
 proprietary models. However, it remains an open question whether the
@@ -95,7 +95,7 @@ should assess performance on:
 	higher;
     \item \textbf{state-of-the-art foundation models} such as Gemini 
 	\parencite{geminiteam2025geminifamilyhighlycapable} or 
-	GPT4.
+	GPT-4.
 \end{itemize}
 
 \subsection{Multi-Dimensional Decoding Ensembles}
@@ -124,7 +124,7 @@ the gap between our approach and the original parameter-space credal
 prediction \parencite{löhr2025credalpredictionbasedrelative}.
 \textbf{Discrete Semantic Entropy:} Currently, our method requires 
 access to token-level log-probabilities (White-Box). To extend this 
-method to closed-source "Black-Box" APIs (e.g., Claude 
+method to closed-source ``Black-Box'' APIs (e.g., Claude 
 \parencite{claude3}, GPT-4 \parencite{openai2024gpt4technicalreport}), 
 future work could integrate \textbf{Discrete Semantic Entropy} 
 \parencite{kuhn2024semanticentropy}, approximating the cluster 

@@ -8,19 +8,20 @@ By treating the temperature hyperparameter as a continuous parameter
 space and applying the statistical principles of relative likelihood,
 we systematically filter out implausible distributions. We then 
 extend semantic entropy to operate over this credal set, yielding
-robust upper and lower uncertainty bounds that serve as a signal 
-for hallucination detection.
+upper and lower uncertainty bounds that serve as a signal 
+for high model uncertainty.
 
 \section{Overview of the Pipeline}
 \label{sec:methodology:overview}
-Our proposed methodology, which we term Credal Semantic Entopy,
+Our proposed methodology, which we term Credal Semantic Entropy,
 works for a given input prompt $x$ (a question and optional context),
 in four sequential stages:
 
 \begin{enumerate}
     \item \textbf{Valid Temperature Selection (The $\alpha$-cut)}:
 	Before generation, we must determine which temperatures
-	produce statistically valid probability distributions. 
+	produce valid probability distributions in the context
+	of relative likelihood. 
 	Using a labeled dataset, we evaluate the model's 
 	average Negative Log-Likelihood (NLL) as shown in 
 	\ref{eq:average_nll}
@@ -47,10 +48,13 @@ in four sequential stages:
 	across all valid temperatures, we establish the lower 
 	and upper bounds for every semantic concept.
 
-    \item \textbf{Quantifying Epistemic Uncertainty}:
-	Finally, we compute the Upper Shannon Entropy using these 
-	bounds. This final scalar value is used to predict whether 
-	the model is hallucinating.
+    \item \textbf{Quantifying Uncertainty}:
+	Finally, we compute the Upper Shannon Entropy derived from these
+	probability bounds. By maximizing the entropy within the credal
+	set, we capture the overall model uncertainty.
+	In the context of open-domain question-answering, this
+	resulting scalar serves as a conservative confidence metric
+	to predict the factual reliability of the generated answer.
 \end{enumerate}
 
 \begin{figure}
@@ -60,7 +64,7 @@ in four sequential stages:
     begins with multi-temperature generation, followed by semantic 
     clustering performed on the union of all generated sequences. 
     Finally, the probability mass of each cluster is marginalized at 
-    every temperature to establish the robust probability intervals 
+    every temperature to establish the probability intervals 
     used for uncertainty quantification.}
     \label{fig:methodology:pipeline_overview}
 \end{figure}
@@ -116,14 +120,14 @@ temperature that yields the minimum $\overline{\text{NLL}}$ as $\tau^{ML}$:
 \label{sec:methodology:temperature_selection:rel_likelihoods}
 Because NLL values are absolute and can vary drastically depending
 on the model and dataset, it is difficult to define a universal 
-threshold for what constitutes a "good" temperature. To standardize
+threshold for what constitutes a ``good'' temperature. To standardize
 this, we map the average NLLs into the relative likelihood space.
 
 As established in Equation \ref{eq:relative_likelihood},
 the relative likelihood $\gamma(\tau)$ of any temperature is computed
 by comparing its likelihood $L(\tau)$ to the optimal likelihood 
 $L(\tau^{ML})$. In the logarithmic domain, this is equivalent to
-to the exponentiated difference of their average NLLs:
+the exponentiated difference of their average NLLs:
 
 \begin{equation}
     \gamma(\tau) = \displaystyle\frac{L(\tau)}{L(\tau^{ML})} 
@@ -157,7 +161,7 @@ The final set of valid temperatures is formally defined as:
 \section{Generation and Semantic Clustering}
 \label{sec:methodology:generation}
 Once the set of valid temperatures $\mathcal{T}_\alpha$
-has been established via the train dataset, we apply the methodology 
+has been established via the training dataset, we apply the methodology 
 to the unseen test queries. For a given input prompt $x$, the goal is
 to map the model's raw token outputs into discrete semantic concepts.
 This requires a two-step process. Generating a diverse pool of 
@@ -165,7 +169,7 @@ candidate responses and clustering them based on semantic equivalence.
 
 \subsection{Multi-Temperature Sequence Generation}
 \label{sec:methodology:generation:sequence_generation}
-The evaluate the model's uncertainty, we must sample responses from 
+To evaluate the model's uncertainty, we must sample responses from 
 every valid temperature.
 For each temperature $\tau \in \mathcal{T}_\alpha$, we prompt the 
 LLM $\mathcal{M}$ to generate $N$ independent answer sequences.
@@ -194,8 +198,8 @@ evaluating uncertainty on the raw lexical set $\mathcal{S}_{total}$
 artificially inflates misconfidence due to the aleatoric linguistic 
 variations. We therefore partition $\mathcal{S}_{total}$ into a set of 
 semantic equivalence classes, or clusters, denoted as 
-$C = \{ c_1, c_2, \dots, c_K \}$.
-
+$C = \{ c_1, c_2, \dots, c_K \}$ by pairwise comparing all sequences across
+all valid temperatures as described in the following.
 To determine if two distinct sequences $s_i$ and $s_j$ belong to the 
 same cluster, we employ an automated Natural Language Inference (NLI)
 model (e.g., DeBERTa-large-MNLI 
@@ -241,7 +245,7 @@ It is important to note that the set of semantic clusters $C$
 is global. It contains every unique meaning generated across 
 \textit{all} valid temperatures.
 If a specific cluster $c_k$ does not contain any sequences generated 
-at a particular temperature $\tau$, we assign it a zero probabilty 
+at a particular temperature $\tau$, we assign it a zero probability 
 mass for that distribution. This ensures that every distribution 
 $P^\tau$ is defined over the same common support $C$, allowing for 
 the direct element-wise comparison required to compute the upper and
@@ -267,24 +271,25 @@ that respect these element-wise bounds.
 Let $C = \{ c_1, c_2, \dots, c_K \}$ be the set of identified semantic 
 clusters. For each cluster $c_k$, we inspect its probability mass
 across all valid temperatures $\tau \in \mathcal{T}_\alpha$
-We define the \textbf{lower probability} $\underline{P}(c_k)$ and 
-the \textbf{upper probability} $\overline{P}(c_k)$  as the minimum and 
+We define the \textbf{lower probability} $\underline{P}(c_k \mid x)$ and 
+the \textbf{upper probability} $\overline{P}(c_k \mid x)$  as the minimum and 
 maximum probabilities observed for that cluster. 
 
 \begin{equation}
-    \underline{P}(c_k) = \min_{\tau \in \mathcal{T}_\alpha} 
+    \underline{P}(c_k \mid x) = \min_{\tau \in \mathcal{T}_\alpha} 
 	P^\tau(c_k \mid x)
     \quad \quad
-    \overline{P}(c_k) = \max_{\tau \in \mathcal{T}_\alpha}
+    \overline{P}(c_k \mid x) = \max_{\tau \in \mathcal{T}_\alpha}
 	P^\tau(c_k \mid x)
     \label{eq:cluster_bounds}
 \end{equation}
 
 These bounds define an interval 
-$[\underline{P}(c_k), \overline{P}(c_k)]$ representing the model's 
+$[\underline{P}(c_k \mid x), \overline{P}(c_k \mid x)]$ representing the model's 
 epistemic ambiguity regarding the plausibility of meaning $c_k$.
 
 \begin{figure}
+    \center
     \includegraphics[width=0.7\textwidth]{gfx/city_classification_intervals.pdf}
     \caption{Geometric representation of the credal set derived from the 
     probability intervals established in Figure 
@@ -303,8 +308,8 @@ interval bounds. Formally:
 
 \begin{equation}
     \mathcal{K} = \left\{ P \in \Delta_K \mid \forall k: 
-	\underline{P}(c_k) \leq P(c_k) \leq \overline{P}(c_k),
-	\sum_{k = 1}^K P(c_k) = 1 \right\}
+	\underline{P}(c_k \mid x) \leq P(c_k \mid x) \leq \overline{P}(c_k \mid x),
+	\sum_{k = 1}^K P(c_k \mid x) = 1 \right\}
     \label{eq:credal_set}
 \end{equation}
 
@@ -313,18 +318,27 @@ $\mathcal{K}$ via these bounds, we capture not just the specific
 distributions observed at sampled temperatures, but the entire region 
 of probability space supported by the valid relative likelihoods.
 
+\textbf{Uncertainty Quantification} \\
+To measure the uncertainty over the semantic clusters, we adapt
+the credal evaluation framework from standard classification tasks,
+as detailed in Section \ref{sec:background:credal_sets:uncertainty}.
+By treating each semantic cluster as a distinct class, we can compute
+the lower and upper bounds of the Shannon Entropy to quantify the
+model's uncertainty.
+% FIX:
+
 \textbf{Upper Semantic Entropy ($H^*$)} \\
 This metric corresponds to the maximum entropy (highest uncertainty)
 attainable by any distribution within the credal set. It serves as 
-our primary signal for hallucination detection 
+our primary signal for high model uncertainty
 (\ref{sec:background:credal_sets:uncertainty}), 
 identifying cases 
 where the model's interval constraints allow for a highly flat, 
 uniform distribution:
 
 \begin{equation}
-    H^*(x) = \max_{P \in \mathcal{K}} 
-	\left( - \sum_{k=1}^K P(c_k) \log P(c_k) \right)
+    H^*(\mathcal{K}) = \max_{P \in \mathcal{K}} 
+	\left( - \sum_{k=1}^K P(c_k \mid x) \log P(c_k \mid x) \right)
     \label{eq:upper_semantic_entropy}
 \end{equation}
 
@@ -333,8 +347,8 @@ Conversely, the lower entropy corresponds to the most deterministic
 distribution consistent with the bounds: 
 
 \begin{equation}
-    H_*(x) = \min_{P \in \mathcal{K}}
-	\left( - \sum_{k=1}^K P(c_k) \log P(c_k)\right)
+    H_*(\mathcal{K}) = \min_{P \in \mathcal{K}}
+	\left( - \sum_{k=1}^K P(c_k \mid x) \log P(c_k \mid x)\right)
     \label{eq:lower_semantic_entropy}
 \end{equation}
 
@@ -344,4 +358,8 @@ uncertainty as shown in Section
 For the experimental evaluation in this thesis, we utilize the 
 upper semantic entropy $H^*$, as it provides the most conservative 
 safety guarantee by considering the maximum plausible uncertainty.
-
+This makes it ideally suited for evaluating a model's answers in a
+conversational context. In such settings, our primary goal is to
+bound the total predictive uncertainty to ensure safe responses,
+rather than explicitly distinguish between the model's lack of
+knowledge and inherent data noise.

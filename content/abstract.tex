@@ -5,6 +5,32 @@
 \label{sec:abstract}
 \vspace*{-10mm}
 
+Standard uncertainty estimation in Large Language Models (LLMs) 
+relies on single, fixed probability distributions. This 
+``point-estimate'' approach often conflates benign linguistic 
+diversity with factual ignorance, failing to reliably quantify 
+uncertainty.
+In this thesis, we introduce \textit{Credal Semantic Entropy},
+a rigorous framework grounded in Imprecise Probabilities. 
+We propose a method to construct Credal Sets---convex sets of 
+probability distributions---based on the statistical notion of 
+relative likelihood. Instead of relying on a single temperature,
+we identify a set of statistically valid temperatures that
+maximize the likelihood of calibration data. We cluster generated
+sequences by semantic meaning and derive interval-valued
+probabilities, computing the Upper Semantic Entropy to capture
+a worst-case estimate of uncertainty.
+We empirically evaluate our approach on the CoQA benchmark using
+the OPT-6.7B model. While theoretically robust, experiments 
+reveal that the credal framework is highly sensitive to relative
+likelihood thresholds ($\alpha$-cuts). Under our tested 
+configurations, single-point baselines outperform Credal Semantic 
+Entropy in uncertainty estimation (measured via AUROC).
+%This thesis lays the foundational groundwork for
+%applying credal uncertainty estimation to autoregressive language
+%models, opening new avenues for future research.
+
+\iffalse
 Accurately quantifying uncertainty in Large Language Models (LLMs) is 
 crucial for their deployment in safety-critical domains. However, 
 standard uncertainty estimation methods typically rely on a single 
@@ -22,8 +48,7 @@ that maximize the likelihood of calibration data. We then aggregate
 generated sequences into semantic clusters and derive interval-valued 
 probabilities  for each meaning. By computing the Upper Semantic 
 Entropy over these intervals, we obtain a worst-case estimate of 
-uncertainty that is robust to hyperparameter volatility.
-
-\textbf{RESULTS ARE MISSING}
+uncertainty.
+\fi
 
 \vspace*{20mm}

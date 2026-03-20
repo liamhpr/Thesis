@@ -10,13 +10,12 @@ landscape of Artificial Intelligence, demonstrating unprecedented
 capabilities in natural language understanding, reasoning and 
 generation 
 \parencite{brown2020languagemodelsfewshotlearners, wei2023chainofthoughtpromptingelicitsreasoning}.
-% PROOF:
 LLMs are increasingly deployed in critical domains ranging 
 from healthcare \parencite{10.1001/jama.2024.21700} 
 to legal analysis \parencite{10850911}. 
 However, despite their fluency, 
 these models suffer from a critical reliability failure:
-the tendency to generate plausible-sounding but factual incorrect 
+the tendency to generate plausible-sounding but factually incorrect 
 statements, a phenomenon widely known as hallucinations 
 \parencite{Huang2023ASO}.
 
@@ -24,7 +23,7 @@ For high-stakes applications, accuracy alone is insufficient. A
 system must also be self-aware of its limitations 
 \parencite{bommasani2022opportunitiesrisksfoundationmodels}. 
 Unfortunately, modern LLMs 
-are frequently "confidently wrong", assigning high probability scores 
+are frequently ``confidently wrong'', assigning high probability scores 
 to their hallucinations due to poor calibration 
 \parencite{guo2017calibrationmodernneuralnetworks, 
 desai2020calibrationpretrainedtransformers} 
@@ -36,23 +35,33 @@ or lexical similarity
 \parencite{fomicheva2020unsupervisedqualityestimationneural}, 
 often fail to detect these errors because they 
 rely on a single, precise probability distribution. This 
-"point-estimate" approach mathematically conflates two distinct 
+``point-estimate'' approach mathematically conflates two distinct 
 sources of uncertainty \parencite{H_llermeier_2021}: 
 \textit{aleatoric uncertainty} 
 (the natural diversity of valid human language) 
 and \textit{epistemic uncertainty} (the model's lack of knowledge). 
 When an LLM distributes its 
 probability mass across five different ways of saying the correct
-answer, standard metrics flag this as high uncertainty, confusing 
-benign linguistic flexibility with factual ignorance.
+answer for a given prompt, standard metrics flag this as 
+high uncertainty, confusing benign linguistic flexibility with 
+factual ignorance. 
+To overcome this limitation, we build upon the semantic clustering
+framework introduced by 
+\textcite{kuhn2023semanticuncertaintylinguisticinvariances}.
+By shifting the unity of measurement from exact lexical strings
+to underlying meanings, we propose a novel method that establishes
+probability intervals over these semantic clusters
+to capture uncertainty for a question-answering task, 
+specifically, CoQA 
+\parencite{reddy2019coqaconversationalquestionanswering}.
 
 \section{Problem Statement}
 \label{sec:intro:problem_statement}
 The core problem addressed in this thesis is the unreliability of
-single-point probability estimates for detecting hallucinations in
-free-form Question Answering.
+single-point probability estimates for uncertainty quantification
+in free-form Question Answering.
 
-Current state-of-the-art methods, such as Semantic entropy
+Current state-of-the-art methods, such as Semantic Entropy
 \parencite{kuhn2023semanticuncertaintylinguisticinvariances},
 attempt to mitigate this by grouping lexically diverse answers
 into semantic clusters. However, even Semantic Entropy relies on a
@@ -60,7 +69,7 @@ single, static probability distribution generated at a fixed
 temperature. If this underlying distribution is miscalculated,
 i.e., peaked around an incorrect fact, the metric will fail to
 signal a warning.
-To robustly detect hallucinations, we need a framework that moves 
+To reliably quantify uncertainty, we need a framework that moves 
 beyond precise probabilities and considers a set of plausible 
 model states.
 
@@ -77,10 +86,12 @@ of semantic distributions. Our specific contributions are as follows:
 
 \begin{itemize}
     \item \textbf{Valid Temperature Selection via Relative Likelihood}:
-	We propose a method to identify a statistically valid range of 
-	decoding temperatures. By treating temperatures as a 
+	We propose a method to identify a valid range of 
+	decoding temperatures. By treating the $\alpha$-threshold as a 
 	hyperparameter and applying an $\alpha$-cut, we systematically 
-	discard implausible distributions.
+	discard implausible distributions with a relative likelihood
+	below $\alpha$. Increasing the $\alpha$-threshold narrows the
+	valid temperature range, whereas decreasing it broadens the range.
 
     \item \textbf{Construction of Semantic Credal Sets}:
 	We extend the concept of Semantic Entropy to operate over 
@@ -90,7 +101,12 @@ of semantic distributions. Our specific contributions are as follows:
 	the model's true epistemic ambiguity. 
 
     \item \textbf{Empirical Validation}:
-
+	We evaluate our framework on the CoQA benchmark using the
+	OPT-6.7B model. Through experiments across multi-step 
+	temperature-grids, we analyze the sensitivity of the 
+	$\alpha$-cut threshold and compare the uncertainty 
+	estimation performance of Credal Semantic Entropy 
+	against	established single-point baselines.
 \end{itemize}
 
 
@@ -112,11 +128,11 @@ The remainder of this thesis is organized as follows:
 	    specifically focusing on Semantic Entropy as the primary 
 	    baseline for our research.
 
-	\item \textbf{Chapter 4 methodology}:
+	\item \textbf{Chapter 4 Methodology}:
 	    formalizes our novel contribution: 
 	    \textit{Credal Semantic Entropy}. It details the algorithm 
 	    for selecting valid temperatures via relative likelihood 
-	    and deriving robust uncertainty bounds from 
+	    and deriving uncertainty bounds from 
 	    interval-valued probability distributions.
 
 	\item \textbf{Chapter 5 Experiments}:
@@ -125,4 +141,8 @@ The remainder of this thesis is organized as follows:
 	    baselines.
 
 	\item \textbf{Chapter 6 Conclusion}:
+	    summarizes the core empirical findings of this thesis,
+	    discusses the practical and theoretical limitations
+	    of the proposed credal framework and outlines promising 
+	    directions for future research.
 \end{itemize}

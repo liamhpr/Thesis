@@ -14,7 +14,7 @@ for high model uncertainty.
 \section{Overview of the Pipeline}
 \label{sec:methodology:overview}
 Our proposed methodology, which we term Credal Semantic Entropy,
-works for a given input prompt $x$ (a question and optional context),
+works for a given input prompt $\mathbf{x}$ (a question and optional context),
 in four sequential stages:
 
 \begin{enumerate}
@@ -24,7 +24,7 @@ in four sequential stages:
 	of relative likelihood. 
 	Using a labeled dataset, we evaluate the model's 
 	average Negative Log-Likelihood (NLL) as shown in 
-	\ref{eq:average_nll}
+	Equation \ref{eq:average_nll}
 	across a discrete grid of temperatures. 
 	We identify the optimal temperature
 	that minimizes the average NLL and compute the relative 
@@ -33,7 +33,7 @@ in four sequential stages:
 	greater or equal than $\alpha$.
 
     \item \textbf{Generation and Semantic Clustering}:
-	Using the prompt $x$, the LLM generates multiple candidate
+	Using the prompt $\mathbf{x}$, the LLM generates multiple candidate
 	responses at every valid temperature in the $\alpha$-cut.
 	We cluster these generated sequences by their meaning
 	over all valid temperatures. 
@@ -65,7 +65,7 @@ in four sequential stages:
     clustering performed on the union of all generated sequences. 
     Finally, the probability mass of each cluster is marginalized at 
     every temperature to establish the probability intervals 
-    used for uncertainty quantification.}
+    used for UQ.}
     \label{fig:methodology:pipeline_overview}
 \end{figure}
 
@@ -89,7 +89,7 @@ likelihood and applying an $\alpha$-cut threshold.
 
 \subsection{Computing the Average Negative Log-Likelihood}
 \label{sec:methodology:temperature_selection:average_nll}
-For every question-answer pair $(x^{(i)}, \mathbf{y}^{(i)})$ in the 
+For every question-answer pair $(\mathbf{x}^{(i)}, \mathbf{y}^{(i)})$ in the 
 training dataset $\mathcal{D}_{\text{Train}}$ of size $D$, we compute the 
 length-normalized NLL (\ref{eq:average_nll}) of the ground-truth answer 
 sequence under the temperature-scaled probability distribution $P^{\tau}$.
@@ -100,7 +100,7 @@ dataset is computed as:
     \overline{\text{NLL}}(\tau) = 
 	\frac{1}{D} \sum_{i=1}^{D} \left( - \frac{1}{T_i} 
 	\sum_{t=1}^{T_i} \log P^\tau(y_t^{(i)} \mid 
-	\mathbf{y}_{<t}^{(i)}, x^{(i)}) \right)
+    \mathbf{y}_{<t}^{(i)}, \mathbf{x}^{(i)}) \right)
     \label{eq:temperature_nll}
 \end{equation}
 
@@ -146,7 +146,9 @@ parameterization.
  \label{sec:methodology:temperature_selection:alpha_cut}
 Following the framework of credal prediction 
 \cite{löhr2025credalpredictionbasedrelative},
-we apply an $\alpha$-cut, retaining only those temperatures whose
+we apply an $\alpha$-cut 
+(Section \ref{sec:background:rel_ll_and_temp_sets:alpha_cuts}), 
+retaining only those temperatures whose
 relative likelihood meets or exceeds a specified confidence 
 threshold $\alpha \in [0,1]$.
 The final set of valid temperatures is formally defined as:
@@ -162,7 +164,7 @@ The final set of valid temperatures is formally defined as:
 \label{sec:methodology:generation}
 Once the set of valid temperatures $\mathcal{T}_\alpha$
 has been established via the training dataset, we apply the methodology 
-to the unseen test queries. For a given input prompt $x$, the goal is
+to the unseen test queries. For a given input prompt $\mathbf{x}$, the goal is
 to map the model's raw token outputs into discrete semantic concepts.
 This requires a two-step process. Generating a diverse pool of 
 candidate responses and clustering them based on semantic equivalence.
@@ -176,7 +178,7 @@ LLM $\mathcal{M}$ to generate $N$ independent answer sequences.
 
 Let $\mathcal{S}_\tau = \{ s_1^\tau, s_2^\tau, \dots, s_N^\tau \}$ 
 denote the set of sequences generated at temperature $\tau$. The total
-pool of generated responses for the prompt $x$ is the union of all 
+pool of generated responses for the prompt $\mathbf{x}$ is the union of all 
 sequences generated across all valid temperatures:
 
 \begin{equation}
@@ -211,7 +213,7 @@ $E(\cdot, \cdot)$ which holds true if and only if there is
 $(s_i \models s_j) \land (s_j \models s_i)$
 
 If $s_i$ entails $s_j$ and $s_j$ entails $s_i$, the sequences are 
-deemed factually equivalent in the context of the prompt $x$ and are 
+deemed factually equivalent in the context of the prompt $\mathbf{x}$ and are 
 assigned to the same cluster $c_k$. Thus, a cluster holds all 
 sequences  that belong to the same equivalence class of 
 $E(\cdot, \cdot)$:  $\forall s, s' \in c_k : E(s, s')$. 
@@ -226,15 +228,15 @@ the normalized sum of the likelihoods of all sequences within that
 cluster, evaluated under the distribution $P^\tau$:
 
 \begin{equation}
-    P^\tau(C_k \mid x) = 
-    \frac{P^\tau(c_k \mid x)}{\sum_{c \in C} P^\tau(c \mid x)}
+    P^\tau(C_k \mid \mathbf{x}) = 
+    \frac{P^\tau(c_k \mid \mathbf{x})}{\sum_{c \in C} P^\tau(c \mid \mathbf{x})}
     \label{eq:normalized_credal_cluster_probs}
 \end{equation}
 
 where
 
 \begin{equation}
-    P^\tau(c_k \mid x) = \sum_{s \in c_k} P^\tau(s \mid x)
+    P^\tau(c_k \mid \mathbf{x}) = \sum_{s \in c_k} P^\tau(s \mid \mathbf{x})
     \label{eq:credal_cluster_probs}
 \end{equation}
 
@@ -250,7 +252,7 @@ mass for that distribution. This ensures that every distribution
 $P^\tau$ is defined over the same common support $C$, allowing for 
 the direct element-wise comparison required to compute the upper and
 lower probability bounds in the next step. To compute the sequence
-probability $P^\tau(s \mid x)$, we use the length normalized
+probability $P^\tau(s \mid \mathbf{x})$, we use the length normalized
 NLL as defined in Equation \ref{eq:average_nll} because we do not want to
 punish longer sequences 
 \parencite{malinin2021uncertaintyestimationautoregressivestructured}. 
@@ -271,21 +273,21 @@ that respect these element-wise bounds.
 Let $C = \{ c_1, c_2, \dots, c_K \}$ be the set of identified semantic 
 clusters. For each cluster $c_k$, we inspect its probability mass
 across all valid temperatures $\tau \in \mathcal{T}_\alpha$
-We define the \textbf{lower probability} $\underline{P}(c_k \mid x)$ and 
-the \textbf{upper probability} $\overline{P}(c_k \mid x)$  as the minimum and 
+We define the \textbf{lower probability} $\underline{P}(c_k \mid \mathbf{x})$ and 
+the \textbf{upper probability} $\overline{P}(c_k \mid \mathbf{x})$  as the minimum and 
 maximum probabilities observed for that cluster. 
 
 \begin{equation}
-    \underline{P}(c_k \mid x) = \min_{\tau \in \mathcal{T}_\alpha} 
-	P^\tau(c_k \mid x)
+    \underline{P}(c_k \mid \mathbf{x}) = \min_{\tau \in \mathcal{T}_\alpha} 
+    P^\tau(C_k \mid \mathbf{x})
     \quad \quad
-    \overline{P}(c_k \mid x) = \max_{\tau \in \mathcal{T}_\alpha}
-	P^\tau(c_k \mid x)
+    \overline{P}(c_k \mid \mathbf{x}) = \max_{\tau \in \mathcal{T}_\alpha}
+    P^\tau(C_k \mid \mathbf{x})
     \label{eq:cluster_bounds}
 \end{equation}
 
 These bounds define an interval 
-$[\underline{P}(c_k \mid x), \overline{P}(c_k \mid x)]$ representing the model's 
+$[\underline{P}(c_k \mid \mathbf{x}), \overline{P}(c_k \mid \mathbf{x})]$ representing the model's 
 epistemic ambiguity regarding the plausibility of meaning $c_k$.
 
 \begin{figure}
@@ -308,8 +310,8 @@ interval bounds. Formally:
 
 \begin{equation}
     \mathcal{K} = \left\{ P \in \Delta_K \mid \forall k: 
-	\underline{P}(c_k \mid x) \leq P(c_k \mid x) \leq \overline{P}(c_k \mid x),
-	\sum_{k = 1}^K P(c_k \mid x) = 1 \right\}
+	\underline{P}(c_k \mid \mathbf{x}) \leq P(c_k \mid \mathbf{x}) \leq \overline{P}(c_k \mid \mathbf{x}),
+    \sum_{k = 1}^K P(c_k \mid \mathbf{x}) = 1 \right\}
     \label{eq:credal_set}
 \end{equation}
 
@@ -338,7 +340,7 @@ uniform distribution:
 
 \begin{equation}
     H^*(\mathcal{K}) = \max_{P \in \mathcal{K}} 
-	\left( - \sum_{k=1}^K P(c_k \mid x) \log P(c_k \mid x) \right)
+    \left( - \sum_{k=1}^K P(c_k \mid \mathbf{x}) \log P(c_k \mid \mathbf{x}) \right)
     \label{eq:upper_semantic_entropy}
 \end{equation}
 
@@ -348,7 +350,7 @@ distribution consistent with the bounds:
 
 \begin{equation}
     H_*(\mathcal{K}) = \min_{P \in \mathcal{K}}
-	\left( - \sum_{k=1}^K P(c_k \mid x) \log P(c_k \mid x)\right)
+    \left( - \sum_{k=1}^K P(c_k \mid \mathbf{x}) \log P(c_k \mid \mathbf{x})\right)
     \label{eq:lower_semantic_entropy}
 \end{equation}
 

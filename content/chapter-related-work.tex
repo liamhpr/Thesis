@@ -7,7 +7,7 @@ significant attention in recent years. As researchers seek to mitigate
 hallucinations and improve model safety, various metrics have been 
 proposed to estimate when a model's generation is likely to be 
 incorrect. This chapter reviews the evolution of these methods,   
-starting from traditional uncertainty quantification (UQ) metrics, and 
+starting from traditional UQ metrics, and 
 culminating in state-of-the-art approaches like Semantic Entropy,
 which serves as the primary baseline for the credal prediction
 methodology developed in this thesis.
@@ -22,10 +22,10 @@ makes them impractical for natural language generation (NLG) in
 massive models. 
 Initial approaches to estimating LLM uncertainty directly adapted
 standard classification metrics or relied on heuristic comparisons.
-These traditional baselines generally fall into three categories: 
-predictive entropy, lexical similarity and self-evaluation.
+These baselines generally fall into three categories: 
+probability-based methods, lexical similarity and self-evaluation.
 
-\section{Predictive Entropy Methods}
+\section{Probability-Based Methods}
 \label{sec:related_work:predictive_entropy_methods}
 The most straightforward methods evaluate the model's confidence 
 using the probability distributions generated during decoding. 
@@ -34,10 +34,22 @@ the holistic confidence of a factual claim. To address this,
 \textcite{malinin2021uncertaintyestimationautoregressivestructured}
 proposed sequence-level predictive entropy (often implemented as 
 length-normalized entropy), which estimates uncertainty across all
-possible output sequences. However, because these methods operate
+possible output sequences. 
+
+Another prominent approach within this category is the 
+\textbf{Margin Measure} \parencite{lin-etal-2022-towards}.
+Instead of calculating the entropy over the entire distribution,
+the margin measure isolates the gap in log-probability
+between the model's most likely sequence and its second most  
+likely sequence. A small margin implies that the model is highly
+conflicted between its top two choices, indicating high 
+uncertainty.
+
+However, both predictive entropy and the margin measure, operate
 strictly on exact token matches, they artificially inflate uncertainty
 when an LLM distributes probability mass across multiple valid 
 phrasings of the same answer.
+
 
 \section{Lexical Similarity}
 \label{sec:related_work:lexical_similarity}
@@ -64,7 +76,7 @@ fact is correct.
 While intuitive, self-evaluation baselines are highly sensitive
 to the specific phrasing of the prompt.
 
-All three of these traditional baseline families fail to reliably 
+All of these baseline families fail to reliably 
 distinguish between benign linguistic flexibility and genuine factual 
 ignorance. 
 Traditional metrics treat these lexical variations as 
@@ -150,7 +162,7 @@ the SE is calculated as the Shannon Entropy over the cluster
 probabilities:
 
 \begin{equation}
-    \text{SE}(x) = - \sum_{c} P(c \mid x) \log P(c \mid x)
+    \text{SE}(\mathbf{x}) = - \sum_{c} P(c \mid \mathbf{x}) \log P(c \mid \mathbf{x})
     \label{eq:semantic_entropy}
 \end{equation}
 
@@ -161,14 +173,14 @@ use Monte Carlo integration over the semantic equivalence classes
 to estimate the expectation in Equation \ref{eq:semantic_entropy}:
 
 \begin{equation}
-    \text{SE}(x) \approx -|C|^{-1} \sum_{i=1}^{|C|}\log P(C_i \mid x)
+    \text{SE}(\mathbf{x}) \approx -|C|^{-1} \sum_{i=1}^{|C|}\log P(C_i \mid \mathbf{x})
     \label{eq:semantic_entropy_estimation}
 \end{equation}
 
 where
 
 \begin{equation}
-    P(C_i \mid x) = \frac{P(c_i \mid x)}{\sum_{c \in C} P(c \mid x)}
+    P(C_i \mid \mathbf{x}) = \frac{P(c_i \mid \mathbf{x})}{\sum_{c \in C} P(c \mid \mathbf{x})}
     \label{eq:nn_cluster_likelihood}
 \end{equation}
 
@@ -233,6 +245,6 @@ applications. It also does not cleanly translate to the autoregressive,
 open-ended generation of sequences.
 
 This limitation motivates the core innovation of our thesis: shifting 
-the uncertainty quantification from the \textit{weight space}
+the UQ from the \textit{weight space}
 (ensembling models) to the \textit{decoding space} 
 (ensembling temperature).

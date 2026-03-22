@@ -5,13 +5,245 @@
 This chapter establishes the theoretical and methodological 
 foundations necessary to understand the contributions of this thesis. 
 Our work lies at the intersection of Natural Language Processing (NLP)
-and Uncertainty Quantification (UQ). To rigorously address the 
-problem of UQ, we must first understand the 
-probabilistic nature of modern language models and the limitations 
-of traditional statistical tools.
+and Uncertainty Quantification (UQ). 
+We first establish the mathematical principles of uncertainty in
+standard machine learning, followed by the probabilistic 
+mechanisms of modern language models and finally how these 
+domains unite in our methodology.
+
+
+\section{Uncertainty in Machine Learning}
+\label{sec:background:uncertainty}
+As LLMs are increasingly deployed in real-world and high-stakes
+applications, for example in healthcare
+\parencite{10.1001/jama.2024.21700},
+their reliability becomes a critical concern.
+A fundamental challenge with deep neural networks, including LLMs,
+is that they are prone to overconfidence. They frequently assign
+high probabilities to incorrect predictions
+\parencite{guo2017calibrationmodernneuralnetworks}.
+Consequently, evaluating a model's performance requires not only
+measuring its accuracy but also quantifying its \textbf{uncertainty}.
+
+
+\subsection{Aleatoric and Epistemic Uncertainty}
+\label{sec:background:uncertainty:aleatoric_epistemic}
+In the field of machine learning, uncertainty can be 
+categorized into two distinct sources: aleatoric and epistemic
+\parencite{kendall2017uncertaintiesneedbayesiandeep, H_llermeier_2021}.
+
+\textbf{Aleatoric Uncertainty} arises from the inherent complexity,
+noise, or randomness in the underlying data generation process. It
+is irreducible, meaning providing the model with more training data 
+will not eliminate this uncertainty
+\parencite{kendall2017uncertaintiesneedbayesiandeep, H_llermeier_2021}.
+In a standard classification task, this might occur when two 
+distinct classes share highly similar features, making perfect
+separation impossible regardless of the model's capacity.
+
+
+\textbf{Epistemic uncertainty}, on the other hand, stems from a lack
+of knowledge or information about the best model.
+This uncertainty occurs when a model encounters out-of-distribution
+(OOD) inputs or queries about facts absent from its training data.
+Unlike aleatoric uncertainty, epistemic uncertainty is reducible.
+Theoretically it can be minimized by providing the model with more 
+comprehensive training data
+\parencite{kendall2017uncertaintiesneedbayesiandeep, H_llermeier_2021}.
+
+
+\subsection{Standard Metrics: Shannon Entropy and Maximum Softmax probability (MSP)}
+\label{sec:background:uncertainty:standard_metrics}
+To quantify these theoretical concepts, we rely on established
+mathematical metrics. For a standard classification model 
+predicting a class $Y$ given input $\mathbf{x}$, two fundamental 
+measures of predictive confidence are \textbf{Shannon Entropy}
+\parencite{https://doi.org/10.1002/j.1538-7305.1948.tb01338.x} and 
+\textbf{Maximum Softmax probability (MSP)} 
+\parencite{hendrycks2018baselinedetectingmisclassifiedoutofdistribution}.
+
+\textbf{Shannon Entropy} 
+quantifies the fundamental uncertainty inherent in the entire
+probability distribution over all possible classes 
+$y \in \mathcal{Y}$.
+For a discrete random variable $Y$ with a probability 
+distribution
+$P(Y \mid \mathbf{x})$, the Shannon Entropy $H$ is defined as
+\parencite{https://doi.org/10.1002/j.1538-7305.1948.tb01338.x}:
+\begin{equation}
+    H(Y) = - \sum_{y \in \mathcal{Y}} P(y \mid \mathbf{x}) \log P(y \mid \mathbf{x})
+    \label{eq:shannon_entropy}
+\end{equation}
+
+Entropy provides a scalar summary of the distribution's shape.
+\begin{itemize}
+    \item \textbf{Low Entropy} ($H \rightarrow 0$): The distribution
+	is highly concentrated (peaked) on one or a few tokens, 
+	indicating that the model is highly certain about its 
+	next prediction.
+
+    \item \textbf{High Entropy} ($H \rightarrow \log |\mathcal{V}|$):
+	The distribution is flat and uniform across the vocabulary,
+	indicating maximum uncertainty.
+\end{itemize}
+
+
+\textbf{Maximum Softmax Probability (MSP)} \\
+While Shannon Entropy evaluates the uncertainty across the entire
+label space $\mathcal{Y}$, the most ubiquitous measure of
+point-prediction confidence in deep learning is the Maximum Softmax
+Probability. For a given input $\mathbf{x}$, MSP simply takes the
+probability of the most likely predicted class $\hat{y}$ as the 
+model's absolute confidence score:
+
+\begin{equation}
+    MSP(\mathbf{x}) = \max_{y \in \mathcal{Y}} P(y \mid \mathbf{x})
+    \label{eq:msp}
+\end{equation}
+
+MSP provides a straightforward scalar value ranging from 
+$\frac{1}{|\mathcal{Y}|}$ (complete uncertainty) to 1.0 
+(absolute certainty).
+
+\textbf{Limitations of Standard Metrics} \\
+Shannon Entropy and MSP are highly effective metrics, provided 
+that the underlying probability distribution $P$ is perfectly 
+calibrated and accurately reflects the true state of the world. 
+However, these metrics inherently assume that the model's output
+distribution is a single, precise, and entirely correct representation
+of reality 
+\parencite{guo2017calibrationmodernneuralnetworks, Gneiting01032007}. 
+
+As demonstrated by \textcite{guo2017calibrationmodernneuralnetworks},
+this assumption of a ``precise probability'' often breaks down in modern
+deep learning models, which frequently suffer from 
+severe overconfidence and miscalibration. Furthermore, standard precise
+probabilities mathematically struggle to distinguish between
+inherent data noise (aleatoric) and a fundamental lack of 
+knowledge (epistemic) \parencite{H_llermeier_2021}. 
+This failure to capture true epistemic misconfidence
+necessitates more robust mathematical frameworks, such as
+imprecise probabilities and credal sets\parencite{Walley1991-WALSRW}.
+
+
+\section{Imprecise Probabilities and Credal Sets}
+\label{sec:background:credal_sets}
+Traditional probability theory operates on the assumption that all
+forms of uncertainty can be adequately represented by a single, 
+precise probability distribution \parencite{Walley1991-WALSRW}.
+Under this paradigm, an agent or model is required to assign an exact
+numerical probability to every possible event, regardless of the 
+amount of evidence available. While computationally convenient,
+this precise framework struggles to model severe epistemic
+uncertainty. When a model lacks sufficient training data or 
+encounters an ambiguous query, forcing it to produce a single 
+probability distribution often results in arbitrary or misleadingly
+confident predictions. Precise probabilities mathematically conflate
+the lack of evidence (epistemic uncertainty) with known stochastic
+noise (aleatoric uncertainty), masking the model's true state of 
+ignorance \parencite{H_llermeier_2021}. Specifically, a single, flat
+probability distribution cannot distinguish between an inherently
+ambiguous input and a completely novel one, as both scenarios yield
+the same low-confidence prediction.
+
+\subsection{Introduction to Credal Sets}
+\label{sec:background:credal_sets:intro}
+To address the limitations of precise probabilities, the framework of
+\textbf{imprecise probabilities} replaces the single distribution
+with a set of plausible distributions
+\parencite{Levi1980-LEVTEO-7, Walley1991-WALSRW}.
+A closed, convex set of probability distributions is known as a 
+\textbf{credal set} \parencite{COZMAN2000199}, denoted by 
+$\mathcal{K}$. 
+
+
+\subsection{The Geometry of Credal Sets}
+\label{sec:background:credal_sets:geometry}
+A credal set $\mathcal{K}$ is geometrically represented as a closed, 
+convex subset of the standard probability simplex $\Delta$. 
+For a classification task with $K$ possible classes 
+$c_1, c_2, \dots, c_K$ (or semantic clusters), 
+the standard simplex $\Delta_K$ is defined as
+\parencite{https://doi.org/10.1002/bimj.4710300705}:
+
+\begin{equation}
+    \Delta_K = \left\{ P \in \mathbb{R}^K \mid 
+	\forall k: P_k \geq 0, \sum_{k=1}^K P_k = 1
+	\right\} 
+    \label{eq:simplex}
+\end{equation}
+
+A probability distribution is a single point within this simplex. 
+In contrast, a credal set represents a region of points.
+
+\textbf{Interval-Valued Probabilities} \\
+One of the most common and practical ways to define this region is  
+through \textbf{probability intervals}. Instead of assigning a precise
+value $P(c_k \mid \mathbf{x})$, we assign a lower bound $\underline{P}(c_k \mid \mathbf{x})$ and an
+upper bound $\overline{P}(c_k \mid \mathbf{x})$ to each class $c_k$
+\parencite{article}.
+
+The credal set induced by these intervals is the set of all 
+distributions consistent with these bounds:
+
+\begin{equation}
+    \mathcal{K} = \left\{ P \in \Delta_K \mid \underline{P} (c_k \mid \mathbf{x}) 
+	\leq P(c_k \mid \mathbf{x}) \leq \overline{P}(c_k \mid \mathbf{x}), \sum_{k=1}^{K} P(c_k \mid \mathbf{x}) = 1 
+	\right\}
+    \label{eq:probability_interval_credal_set}
+\end{equation}
+
+Geometrically, these linear constraints form a \textbf{convex polytope}
+within the simplex
+\parencite{article}.
+
+If the intervals are wide (high epistemic uncertainty), the polytope
+covers a large volume of the simplex. If the intervals are narrow
+(low uncertainty), the polytopes shrinks toward a single point.
+This geometric interpretation is fundamental to understanding how
+we quantify uncertainty in Chapter \ref{sec:methodology}.
+
+
+\subsection{Computing Uncertainty on Credal Sets}
+\label{sec:background:credal_sets:uncertainty}
+To quantify the uncertainty of a model's prediction 
+using a credal set, we must extend standard metrics like 
+Shannon Entropy to operate over sets of distributions.
+Since we have a set of probability distributions $\mathcal{K}$, 
+we can determine the \textbf{lower entropy} and  
+\textbf{upper entropy} \parencite{ABELLAN2005235} 
+by finding the minimum and maximum entropy 
+values across the set \parencite{Abellán01022006, H_llermeier_2021}:
+
+\begin{equation}
+    H_*(\mathcal{K}) = \min_{P \in \mathcal{K}} H(P), 
+	\quad H^*(\mathcal{K}) = \max_{P \in \mathcal{K}} H(P)
+    \label{eq:lower_upper_entropy}
+\end{equation}
+
+We can use these bounds to quantify total uncertainty $U(\mathcal{K})$,
+aleatoric uncertainty $AU(\mathcal{K})$ and epistemic uncertainty 
+$EU(\mathcal{K})$ \parencite{Abellán01022006, H_llermeier_2021}:
+
+\begin{equation}
+    U(\mathcal{K}) = AU(\mathcal{K}) + EU(\mathcal{K})
+    \label{eq:credal_total_uncertainty}
+\end{equation}
+
+\begin{equation}
+    H^*(\mathcal{K}) = H_*(\mathcal{K}) + 
+	\left(H^*(\mathcal{K}) - H_*(\mathcal{K})\right)
+    \label{eq:credal_uncertainty}
+\end{equation}
+
+Here, upper entropy represents total uncertainty \parencite{ABELLAN2005235},
+lower entropy represents aleatoric uncertainty and the difference 
+between them is used as a measure for epistemic uncertainty. 
 
 \section{Large Language Models and Generation}
 \label{sec:background:llms}
+Having established the framework for quantifying uncertainty,
+we now turn to the models under investigation.
 Large Language Models (LLMs) represent a class of 
 deep learning models designed to process, 
 understand, and generate human language. 
@@ -212,70 +444,43 @@ epistemic uncertainty.
 % NOTE: Do I want to keep that sentence?
 
 
-\section{Uncertainty in Machine Learning}
-\label{sec:background:uncertainty}
-As LLMs are increasingly deployed in real-world and high-stakes
-applications, for example in healthcare
-\parencite{10.1001/jama.2024.21700},
-their reliability becomes a critical concern.
-A fundamental challenge with deep neural networks, including LLMs,
-is that they are prone to overconfidence. They frequently assign
-high probabilities to incorrect predictions
-\parencite{guo2017calibrationmodernneuralnetworks}.
-Consequently, evaluating a model's performance requires not only
-measuring its accuracy but also quantifying its \textbf{uncertainty}.
+\section{Quantifying Uncertainty in LLMs}
+\label{sec:background:quantifying_uncertainty_in_llms}
+Applying the principles of uncertainty quantification to LLMs
+presents unique challenges that do not exist in standard 
+classification tasks. In classification, the label space is fixed
+and mutually exclusive. In natural language generation, however,
+the model must navigate a massive, interconnected vocabulary over
+multiple autoregressive steps, making it difficult to disentangle
+aleatoric from epistemic uncertainty.
 
+In NLP, aleatoric uncertainty
+is highly prevalent due to the inherent ambiguity of language.
+Often, there are multiple semantically equivalent ways to express the
+same underlying thought. For example, ``It is raining heavily'' and
+``It is pouring outside'' describe the same state, distributing the 
+model’s probability mass across different valid token sequences 
+\parencite{kuhn2023semanticuncertaintylinguisticinvariances}.
 
-\subsection{Aleatoric and Epistemic Uncertainty}
-\label{sec:background:uncertainty:aleatoric_epistemic}
-In the field of machine learning, uncertainty can be 
-categorized into two distinct sources: aleatoric and epistemic
+Epistemic uncertainty arises when the model suffers from a genuine
+lack of knowledge, such as when it faces out-of-distribution (OOD)
+prompts or queries about facts absent from its training data
 \parencite{kendall2017uncertaintiesneedbayesiandeep, H_llermeier_2021}.
 
-\textbf{Aleatoric Uncertainty} arises from the inherent complexity,
-noise, or randomness in the underlying data generation process. It
-is irreducible, meaning providing the model with more training data 
-will not eliminate this uncertainty
-\parencite{kendall2017uncertaintiesneedbayesiandeep, H_llermeier_2021}.
-In the context of Natural 
-Language Processing (NLP), aleatoric uncertainty is highly prevalent
-due to the inherent flexibility and ambiguity of human language.
-For a given prompt, there are often multiple semantically equivalent
-and perfectly valid responses. For example, the answers 
-``It is raining heavily'' and ``It is pouring outside'' describe the
-same state, distributing the model's probability mass across 
-different valid token sequences.
+\subsection{Negative Log-Likelihood in LLMs}
+\label{sec:background:quantifying_uncertainty_in_llms:nll_in_llms}
+While standard classification evaluates the likelihood of a 
+single class prediction, evaluating an LLM requires quantifying
+the model's confidence over an entire generated sequence.
+For a given input context $\mathbf{x}$ and a target sequence
+$\mathbf{y}$, the sequence likelihood is the product of the 
+individual token probabilities, as defined by the chain rule
+(Equation \ref{eq:sequence_probability}).
 
-
-\textbf{Epistemic uncertainty}, on the other hand, stems from a lack
-of knowledge or information about the best model.
-This uncertainty occurs when a model encounters out-of-distribution
-(OOD) inputs or queries about facts absent from its training data.
-Unlike aleatoric uncertainty, epistemic uncertainty is reducible.
-Theoretically it can be minimized by providing the model with more 
-comprehensive training data
-\parencite{kendall2017uncertaintiesneedbayesiandeep, H_llermeier_2021}.
-
-
-\subsection{Standard Metrics: Shannon Entropy and Likelihood}
-\label{sec:background:uncertainty:standard_metrics}
-To quantify the theoretical concepts of aleatoric and epistemic
-uncertainty, we rely on established mathematical metrics. In the
-context of probabilistic sequence modeling, two fundamental 
-measures for evaluating a model's predictive confidence are 
-\textbf{Likelihood} and \textbf{Shannon Entropy}.
-
-\textbf{Likelihood and Negative Log-Likelihood (NLL)} \\
-The likelihood represents the probability assigned by the model
-to a specific, observed sequence of tokens. For a given input
-context $\mathbf{x}$ and a target sequence $\mathbf{y}$,
-the sequence likelihood is the product of the individual token
-probabilities as defined in \ref{eq:sequence_probability}.
-Because multiplying many small probabilities leads
-to numerical underflow, it is standard practice to compute
-the \textbf{Negative Log-Likelihood (NLL)}
+Because multiplying many small probabilities for long sequences
+leads to numerical underflow, it is standard practice to compute 
+the \textbf{Negative Log-Likelihood (NLL)} 
 \parencite{Goodfellow-et-al-2016}.
-
 Taking the negative logarithm transforms the product of the 
 probabilities into a sum. Furthermore, to fairly compare sequences 
 of different lengths, the NLL can be normalized by the total
@@ -295,177 +500,6 @@ number of tokens $T$, yielding the average NLL per token
 \end{equation}
 A lower NLL indicates that the model assigns a higher
 probability to the target sequence, implying higher confidence.
-
-\textbf{Shannon Entropy} \\
-While sequence likelihood evaluates the probability the model assigns
-to a \textit{specific} target sequence, \textbf{Shannon Entropy}
-quantifies the fundamental uncertainty inherent in a probability
-distribution. In the context of autoregressive models, calculating
-the entropy of the predictive distribution over the entire vocabulary
-at a given time step $t$ measures the expected ``surprise'' or 
-uncertainty in predicting the next token
-\parencite{https://doi.org/10.1002/j.1538-7305.1948.tb01338.x}.
-
-For a discrete random variable $Y_t$ representing the next token, 
-with a probability distribution $P(Y_t \mid \mathbf{y}_{<t}, \mathbf{x})$
-over the vocabulary $\mathcal{V}$, the Shannon Entropy $H$ is
-defined as:
-\begin{equation}
-    H(Y_t) = -\sum_{v \in \mathcal{V}} 
-    P(y_t = v \mid \mathbf{y}_{<t}, \mathbf{x})
-    \log P(y_t = v \mid \mathbf{y}_{<t}, \mathbf{x})
-    \label{eq:shannon_entropy}
-\end{equation}
-
-Entropy provides a scalar summary of the distribution's shape.
-\begin{itemize}
-    \item \textbf{Low Entropy} ($H \rightarrow 0$): The distribution
-	is highly concentrated (peaked) on one or a few tokens, 
-	indicating that the model is highly certain about its 
-	next prediction.
-
-    \item \textbf{High Entropy} ($H \rightarrow \log |\mathcal{V}|$):
-	The distribution is flat and uniform across the vocabulary,
-	indicating maximum uncertainty.
-\end{itemize}
-
-
-\textbf{Limitations of Standard Metrics} \\
-Both NLL and Shannon Entropy are highly effective metrics, provided 
-that the underlying probability distribution $P$ is perfectly 
-calibrated and accurately reflects the true state of the world. 
-However, these metrics inherently assume that the model's output
-distribution is a single, precise, and entirely correct representation
-of reality 
-\parencite{guo2017calibrationmodernneuralnetworks, Gneiting01032007}. 
-
-As demonstrated by \textcite{guo2017calibrationmodernneuralnetworks},
-this assumption of a ``precise probability'' often breaks down in modern
-deep learning models, including LLMs, which frequently suffer from 
-severe overconfidence and miscalibration. Furthermore, standard precise
-probabilities mathematically struggle to distinguish between
-inherent data noise (aleatoric) and a fundamental lack of 
-knowledge (epistemic) \parencite{H_llermeier_2021}. 
-This failure to capture true epistemic misconfidence
-necessitates more robust mathematical frameworks, such as
-imprecise probabilities and credal sets\parencite{Walley1991-WALSRW}.
-
-
-\section{Imprecise Probabilities and Credal Sets}
-\label{sec:background:credal_sets}
-Traditional probability theory operates on the assumption that all
-forms of uncertainty can be adequately represented by a single, 
-precise probability distribution \parencite{Walley1991-WALSRW}.
-Under this paradigm, an agent or model is required to assign an exact
-numerical probability to every possible event, regardless of the 
-amount of evidence available. While computationally convenient,
-this precise framework struggles to model severe epistemic
-uncertainty. When a model lacks sufficient training data or 
-encounters an ambiguous query, forcing it to produce a single 
-probability distribution often results in arbitrary or misleadingly
-confident predictions. Precise probabilities mathematically conflate
-the lack of evidence (epistemic uncertainty) with known stochastic
-noise (aleatoric uncertainty), masking the model's true state of 
-ignorance \parencite{H_llermeier_2021}. Specifically, a single, flat
-probability distribution cannot distinguish between an inherently
-ambiguous input and a completely novel one, as both scenarios yield
-the same low-confidence prediction.
-
-\subsection{Introduction to Credal Sets}
-\label{sec:background:credal_sets:intro}
-To address the limitations of precise probabilities, the framework of
-\textbf{imprecise probabilities} replaces the single distribution
-with a set of plausible distributions
-\parencite{Levi1980-LEVTEO-7, Walley1991-WALSRW}.
-A closed, convex set of probability distributions is known as a 
-\textbf{credal set} \parencite{COZMAN2000199}, denoted by 
-$\mathcal{K}$. 
-
-
-\subsection{The Geometry of Credal Sets}
-\label{sec:background:credal_sets:geometry}
-A credal set $\mathcal{K}$ is geometrically represented as a closed, 
-convex subset of the standard probability simplex $\Delta$. 
-For a classification task with $K$ possible classes 
-$c_1, c_2, \dots, c_K$ (or semantic clusters), 
-the standard simplex $\Delta_K$ is defined as
-\parencite{https://doi.org/10.1002/bimj.4710300705}:
-
-\begin{equation}
-    \Delta_K = \left\{ P \in \mathbb{R}^K \mid 
-	\forall k: P_k \geq 0, \sum_{k=1}^K P_k = 1
-	\right\} 
-    \label{eq:simplex}
-\end{equation}
-
-A probability distribution is a single point within this simplex. 
-In contrast, a credal set represents a region of points.
-
-\textbf{Interval-Valued Probabilities} \\
-One of the most common and practical ways to define this region is  
-through \textbf{probability intervals}. Instead of assigning a precise
-value $P(c_k \mid \mathbf{x})$, we assign a lower bound $\underline{P}(c_k \mid \mathbf{x})$ and an
-upper bound $\overline{P}(c_k \mid \mathbf{x})$ to each class $c_k$
-\parencite{article}.
-
-The credal set induced by these intervals is the set of all 
-distributions consistent with these bounds:
-
-\begin{equation}
-    \mathcal{K} = \left\{ P \in \Delta_K \mid \underline{P} (c_k \mid \mathbf{x}) 
-	\leq P(c_k \mid \mathbf{x}) \leq \overline{P}(c_k \mid \mathbf{x}), \sum_{k=1}^{K} P(c_k \mid \mathbf{x}) = 1 
-	\right\}
-    \label{eq:probability_interval_credal_set}
-\end{equation}
-
-Geometrically, these linear constraints form a \textbf{convex polytope}
-within the simplex
-\parencite{article}.
-
-If the intervals are wide (high epistemic uncertainty), the polytope
-covers a large volume of the simplex. If the intervals are narrow
-(low uncertainty), the polytopes shrinks toward a single point.
-This geometric interpretation is fundamental to understanding how
-we quantify uncertainty in chapter \ref{sec:methodology}.
-
-
-\subsection{Computing Uncertainty on Credal Sets}
-\label{sec:background:credal_sets:uncertainty}
-To quantify the total uncertainty of a model's prediction 
-using a credal set, we must extend standard metrics like 
-Shannon Entropy to operate over sets of distributions.
-Since we have a set of probability distributions $\mathcal{K}$, 
-we can determine the \textbf{lower entropy} and  
-\textbf{upper entropy} \parencite{ABELLAN2005235} 
-by finding the minimum and maximum entropy 
-values across the set \parencite{Abellán01022006, H_llermeier_2021}:
-
-\begin{equation}
-    H_*(\mathcal{K}) = \min_{P \in \mathcal{K}} H(P), 
-	\quad H^*(\mathcal{K}) = \max_{P \in \mathcal{K}} H(P)
-    \label{eq:lower_upper_entropy}
-\end{equation}
-
-We can use these bounds to quantify total uncertainty $U(\mathcal{K})$,
-aleatoric uncertainty $AU(\mathcal{K})$ and epistemic uncertainty 
-$EU(\mathcal{K})$ \parencite{Abellán01022006, H_llermeier_2021}:
-
-\begin{equation}
-    U(\mathcal{K}) = AU(\mathcal{K}) + EU(\mathcal{K})
-    \label{eq:credal_total_uncertainty}
-\end{equation}
-
-\begin{equation}
-    H^*(\mathcal{K}) = H_*(\mathcal{K}) + 
-	\left(H^*(\mathcal{K}) - H_*(\mathcal{K})\right)
-    \label{eq:credal_uncertainty}
-\end{equation}
-
-Here, upper entropy represents total uncertainty \parencite{ABELLAN2005235},
-lower entropy represents aleatoric uncertainty and the difference 
-between them is used as a measure for epistemic uncertainty. 
-
-
 \section{Relative Likelihood and Valid Temperature Sets}
 \label{sec:background:rel_ll_and_temp_sets}
 To systematically construct a credal set, we need a rigorous criterion
@@ -486,11 +520,11 @@ temperature $\tau \in \mathcal{T}$ as the parameter of interest.
 Let $L(\tau)$ denote the likelihood of the target sequence generated 
 at temperature $\tau$. Furthermore, let $\tau^{ML}$ be the optimal
 temperature that yields the highest likelihood (or equivalently,
-minimizes the average Negative Log-Likelihood).
+minimizes the NLL).
 To characterize the plausibility of any other temperature $\tau$, we
 compute its relative likelihood $\gamma(\tau)$, defined as the 
 ratio of its likelihood to the maximum likelihood
-\parencite{Birnbaum01061962, https://doi.org/10.2307/3315449, https://doi.org/10.1111/1467-9868.00205}:
+\parencite{largesampledistribution, Birnbaum01061962, https://doi.org/10.2307/3315449, https://doi.org/10.1111/1467-9868.00205}:
 
 \begin{equation}
     \gamma(\tau) = 
@@ -502,7 +536,7 @@ ratio of its likelihood to the maximum likelihood
 By definition, $\gamma(\tau)$ is bounded in the interval $[0,1]$, 
 where $\gamma(\tau^{ML}) = 1$. The relative likelihood provides
 an intuitive measure of how well a specific temperature explains
-the data copmared to the optimal temperature setting.
+the data compared to the optimal temperature setting.
 
 \subsection{Constructing $\alpha$-Cuts for Temperatures}
 \label{sec:background:rel_ll_and_temp_sets:alpha_cuts}
@@ -518,7 +552,7 @@ set is formally referred to as an \textbf{$\alpha$-cut}
     \label{eq:alpha_cut}
 \end{equation}
 
-According to this definiton, a temperature $\tau$ is considered
+According to this definition, a temperature $\tau$ is considered
 implausible, and is therefore excluded from the valid set, if 
 its likelihood is too small compared to the likelihood of the 
 best temperature, specifically if it is less than $\alpha$

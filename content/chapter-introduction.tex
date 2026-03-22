@@ -29,7 +29,8 @@ to their hallucinations due to poor calibration
 desai2020calibrationpretrainedtransformers} 
 and the nature of their training objectives \parencite{Ji_2023}.
 
-Standard uncertainty metrics, such as predictive entropy
+Standard uncertainty metrics in Nautural Language Generation (NLG),
+such as predictive entropy
 \parencite{malinin2021uncertaintyestimationautoregressivestructured}
 or lexical similarity 
 \parencite{fomicheva2020unsupervisedqualityestimationneural}, 
@@ -51,15 +52,15 @@ framework introduced by
 By shifting the unity of measurement from exact lexical strings
 to underlying meanings, we propose a novel method that establishes
 probability intervals over these semantic clusters
-to capture uncertainty for a question-answering task, 
+to capture uncertainty for a conversational question-answering task, 
 specifically, CoQA 
 \parencite{reddy2019coqaconversationalquestionanswering}.
 
 \section{Problem Statement}
 \label{sec:intro:problem_statement}
 The core problem addressed in this thesis is the unreliability of
-single-point probability estimates for uncertainty quantification
-in free-form Question Answering.
+single-point probability estimates for uncertainty quantification (UQ)
+in free-form question-answering.
 
 Current state-of-the-art methods, such as Semantic Entropy
 \parencite{kuhn2023semanticuncertaintylinguisticinvariances},
@@ -81,16 +82,17 @@ and LLM decoding.
 
 Drawing on the theory of \textit{Credal Prediction based on Relative 
 Likelihood} \parencite{löhr2025credalpredictionbasedrelative}, we 
-introduce a statistically rigorous method to construct a credal set 
+introduce a method to construct a credal set 
 of semantic distributions. Our specific contributions are as follows: 
 
 \begin{itemize}
     \item \textbf{Valid Temperature Selection via Relative Likelihood}:
 	We propose a method to identify a valid range of 
-	decoding temperatures. By treating the $\alpha$-threshold as a 
-	hyperparameter and applying an $\alpha$-cut, we systematically 
+	decoding temperatures. By utilizing relative likelihood and 
+	applying an $\alpha$-cut, we systematically 
 	discard implausible distributions with a relative likelihood
-	below $\alpha$. Increasing the $\alpha$-threshold narrows the
+	below $\alpha$. We treat the $\alpha$-threshold as a 
+	hyperparameter, increasing the $\alpha$-threshold narrows the
 	valid temperature range, whereas decreasing it broadens the range.
 
     \item \textbf{Construction of Semantic Credal Sets}:
@@ -122,8 +124,8 @@ The remainder of this thesis is organized as follows:
 	    imprecise probabilities and credal sets.
 
 	\item \textbf{Chapter 3 Related Work}:
-	    surveys the current landscape of uncertainty 
-	    quantification. It contrasts traditional point-estimate 
+	    surveys the current landscape of UQ. 
+	    It contrasts traditional point-estimate 
 	    methods with recent advancements in semantic consistency, 
 	    specifically focusing on Semantic Entropy as the primary 
 	    baseline for our research.

@@ -6,7 +6,7 @@
 \label{sec:conclusion:summary}
 As LLMs are increasingly deployed in high-stakes domains, their tendency to 
 hallucinate plausible but factually incorrect information remains a critical
-vulnerability. Standard uncertainty quantification methods rely on single,
+vulnerability. Standard uncertainty quantification (UQ) methods rely on single,
 precise probability distributions. By mathematically conflating benign
 linguistic diversity (aleatoric uncertainty) with a genuine lack of
 knowledge (epistemic uncertainty), models frequently appear misleadingly 
@@ -32,23 +32,23 @@ temperature grids (20-step and 50-step) and varying $\alpha$ thresholds,
 we compared the upper semantic entropy of our credal set against established
 single-point baselines.
 
-Our empirical results revealed that while the credal framework is 
-theoretically sound, it faces significant practical challenges. Under our 
+Our empirical results revealed that it faces significant practical challenges.
+Under our
 tested configurations, strong standard baselines outperformed the proposed
-credal semantic entropy in uncertainty quantification (measured via AUROC).
+Credal Semantic Entropy in UQ (measured via AUROC).
 %We observed that the performance of the credal approach is highly sensitive to the $\alpha$ threshold, overly restrictive cuts collapse the probability intervals, neutralizing the benefits of the set-based approach.
 
 In conclusion, this thesis provides a formal theoretical 
 connection between language model decoding hyperparameters and
 imprecise probabilities. Building upon this foundation,
 future research can continue to advance interval-based 
-uncertainty quantification.
+UQ.
 
 
 \section{Limitations}
 \label{sec:conclusion:limitations}
-While the proposed credal semantic entropy framework provides a rigorous,
-theoretically grounded approach to uncertainty quantification,
+While the proposed Credal Semantic Entropy framework provides a rigorous,
+theoretically grounded approach to UQ,
 this study is
 subject to several practical and methodological limitations.
 The most significant limitation of our approach is the high computational
@@ -61,7 +61,7 @@ Evaluating the method across a wider
 variety of domains and with
 more granular temperature grids was computationally prohibitive.
 Furthermore, all experiments were conducted on the OPT-6.7B
-\parencite{zhang2022opt} model. This
+model \parencite{zhang2022opt}. This
 specific architecture was selected because it is an open-weights 
 (``white-box'') model, granting full access to token-level logits required 
 for our calculations, while also being small enough to run on accessible 
@@ -74,8 +74,8 @@ mirrors those of massive, instruction-tuned foundation models (e.g. GPT-4
 
 \section{Future Work}
 \label{sec:conclusion:future}
-While this thesis establishes a rigorous baseline for credal semantic 
-entropy using temperature scaling, several avenues remain for refining 
+While this thesis establishes a rigorous baseline for Credal Semantic 
+Entropy using temperature scaling, several avenues remain for refining 
 the methodology and extending its application. We outline three primary
 directions for future research.
 

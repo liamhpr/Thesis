@@ -11,17 +11,17 @@ relies on single, fixed probability distributions. This
 diversity with factual ignorance, failing to reliably quantify 
 uncertainty.
 In this thesis, we introduce \textit{Credal Semantic Entropy},
-a rigorous framework grounded in Imprecise Probabilities. 
-We propose a method to construct Credal Sets---convex sets of 
+a framework grounded in Imprecise Probabilities. 
+We propose a method to construct credal sets---convex sets of 
 probability distributions---based on the statistical notion of 
 relative likelihood. Instead of relying on a single temperature,
-we identify a set of statistically valid temperatures that
+we identify a set of temperatures that
 maximize the likelihood of calibration data. We cluster generated
 sequences by semantic meaning and derive interval-valued
 probabilities, computing the Upper Semantic Entropy to capture
 a worst-case estimate of uncertainty.
 We empirically evaluate our approach on the CoQA benchmark using
-the OPT-6.7B model. While theoretically robust, experiments 
+the OPT-6.7B model. Experiments 
 reveal that the credal framework is highly sensitive to relative
 likelihood thresholds ($\alpha$-cuts). Under our tested 
 configurations, single-point baselines outperform Credal Semantic 
